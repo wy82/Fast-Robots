@@ -4,4 +4,4 @@ _site
 .jekyll-metadata
 vendor
 Gemfile.lock
-_site/feed.xml
+feed.xml
