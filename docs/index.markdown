@@ -7,4 +7,4 @@ author_profile: true
 include:
   - footer.html
 ---
-A documentation of various projects and coursework for ECE 4160: Fast Robots.
+A documentation of various projects and coursework for ECE 4160: Fast Robots (Spring 2023).

@@ -17,7 +17,8 @@ plugins:
   - jekyll-include-cache
 author:
   name   : "William Yuan"
-  bio    : "A student majoring in ECE at Cornell University"
+  avatar : "/assets/images/bio-photo.jpg"
+  bio    : "A student majoring in ECE at Cornell University (class of 2024). My interests lie in signal processing and control, but I'm also interested in exploring how those fields can be applied to robotics."
   links:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
