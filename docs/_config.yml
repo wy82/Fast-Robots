@@ -5,6 +5,7 @@ description: >-
 baseurl: "/Fast-Robots"
 url: "https://wy82.github.io" 
 github_username:  wy82
+github: [metadata}
 remote_theme: "mmistakes/minimal-mistakes@4.24.0"
 markdown: kramdown
 search: true
