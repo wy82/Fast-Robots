@@ -15,11 +15,6 @@ include:
   - _pages
 plugins:
   - jekyll-include-cache
-  - jekyll-paginate
-  - jekyll-sitemap
-  - jekyll-gist
-  - jekyll-feed
-  - jemoji
 author:
   name   : "William Yuan"
   bio    : "A student majoring in ECE at Cornell University"
@@ -27,7 +22,11 @@ author:
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/wy82"
-
+footer:
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/wy82"
 defaults:
   # _pages
   - scope:
