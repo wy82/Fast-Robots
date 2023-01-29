@@ -5,15 +5,20 @@ description: >-
 baseurl: "/Fast-Robots"
 url: "https://wy82.github.io" 
 github_username:  wy82
-github: [metadata}
+github: [metadata]
 remote_theme: "mmistakes/minimal-mistakes@4.24.0"
 markdown: kramdown
-search: true
+mathjax: true
 minimal_mistakes_skin: dark
 include:
   - _pages
 plugins:
   - jekyll-include-cache
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-feed
+  - jemoji
 author:
   name   : "William Yuan"
   bio    : "A student majoring in ECE at Cornell University"
