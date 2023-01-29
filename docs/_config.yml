@@ -11,7 +11,8 @@ search: true
 minimal_mistakes_skin: dark
 include:
   - _pages
-
+plugins:
+  - jekyll-include-cache
 author:
   name   : "William Yuan"
   bio    : "A student majoring in ECE at Cornell University"
