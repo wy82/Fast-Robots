@@ -13,7 +13,6 @@ mathjax: true
 minimal_mistakes_skin: dark
 include:
   - _pages
-  - footer
 plugins:
   - jekyll-include-cache
 author:
