@@ -4,5 +4,7 @@
 layout: single
 title: "About"
 author_profile: true
+include:
+  - footer
 ---
 A documentation of various projects and coursework for ECE 4160: Fast Robots.
