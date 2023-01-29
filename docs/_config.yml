@@ -1,9 +1,8 @@
-title: Your awesome title
-email: your-email@example.com
-description: >- # this means to ignore newlines until "baseurl:"
-  Write an awesome description for your new site here. You can edit this
-  line in _config.yml. It will appear in your document head meta (for
-  Google search results) and in your feed.xml site description.
-baseurl: "wy82.github.io" # the subpath of your site, e.g. /blog
-url: "https://wy82.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+title: Fast Robots
+email: wy82@cornell.edu
+description: >- 
+        A documentation of projects in ECE 4160: Fast Robots (Spring 2023).
+domain: "wy82.github.io" 
+baseurl: "Fast-Robots"
+url: "https://wy82.github.io" 
 github_username:  wy82
