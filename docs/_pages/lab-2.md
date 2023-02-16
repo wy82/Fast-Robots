@@ -35,7 +35,7 @@ ble = get_ble_controller()
 # Connect to the Artemis Device
 ble.connect()
 '''
-![Connection](_images/connection.png)
+![Connection](/assets/images/connection.png)
 
 ## Codebase:
 In short, the Bluetooth protocol mainly consists of peripheral devices such as the Artemis Nano that advertise services, each of which contain various characteristics that hold 512 byte values. To identify a particular service or characteristic, the protocol uses binary numbers known as a Universal Unique Identifier (UUID). Hence, to establish the connection between the laptop and Artemis Nano, it was crucial to first ensure that both devices agreed on the same UUIDs and addresses.
@@ -48,16 +48,16 @@ A somewhat similar code setup is also burned onto the Artemis Nano, which consis
 
 ## Configurations:
 As mentioned before, the first step in establishing the Bluetooth connection was to ensure that the configurations were consistent across both devices. This included the UUIDs and command types:
-![Python UUID](_images/Python_UUID.png)
-![Arduino UUID](_images/Arduino_UUID.png)
-![Connection](_images/Python_cmd_types.png)
-![Connection](_images/Arduino_cmd_types.png)
+![Python UUID](/assets/images/Python_UUID.png)
+![Arduino UUID](/assets/images/Arduino_UUID.png)
+![Connection](/assets/images/Python_cmd_types.png)
+![Connection](/assets/images/Arduino_cmd_types.png)
 Admittedly, the list of command types was a bit longer than necessary, which was mainly to prepare for the rest of the lab and future labs.
 
 ## Demo:
 The next step was to run a simple demo of basic Bluetooth commands, which mainly consisted of sending and receiving strings, integers, and floating point values::
-![Python Demo](_images/Python_Demo.png)
-![Arduino Demo](_images/Arduino_Demo.png)
+![Python Demo](/assets/images/Python_Demo.png)
+![Arduino Demo](/assets/images/Arduino_Demo.png)
 
 ## Echo Command:
 The first lab task was to send an ECHO command, which basically involved modifying the string characteristic value on the side of the Artemis Nano and then simply returning the modified string back to the computer:
@@ -79,7 +79,7 @@ case ECHO:
             
     break;
 '''
-![Echo](_images/ECHO.png)
+![Echo](/assets/images/ECHO.png)
 
 ## Get Time Command:
 The next command was GET_TIME_MILLIS, which simply returned a timestamp at the moment of receiving the command:
@@ -93,10 +93,9 @@ case GET_TIME_MILLIS:
             
     break;
 '''
-![Get Time](_images/GET_TIME_MILLIS.png)
 
 ## Setting up a Notification Handler:
-To make things more interesting, a simple notification handler function was added, which just extracted the time in milliseconds out of the string:
+To make things a little more interesting, a simple notification handler function was added, which just extracted the time in milliseconds out of the string:
 '''python
 async def get_time_millis(uuid,byte_array):
     global time_millis
@@ -104,10 +103,43 @@ async def get_time_millis(uuid,byte_array):
     time_str = ble.bytearray_to_string(byte_array)
     time_millis = int(time_str[2::])
 '''
-![Notification Handler](_images/Notif_Handler.png)
+![Notification Handler](/assets/images/GET_TIME_MILLIS.png)
 
 ## Get Temperature Command:
+Building off of the previous command, GET_TEMP_5s was made to send a set of timestamped die temperatures sampled once per second over a five second period was sent.
+'''cpp
+case GET_TEMP_5s:
+    int prev;
+    int count;
+    int current;
+    
+    // Write string back
+    tx_estring_value.clear();
+    prev = millis();
+    count = 0;
+            
+    while(count < 5){
+    	current = millis();
+    	if (current - prev >= 1000){
+           tx_estring_value.append("T:");
+           tx_estring_value.append(int(millis())); 
+           tx_estring_value.append("|C:");
+           tx_estring_value.append(getTempDegC()); 
+           tx_estring_value.append("|");
+           prev = current;
+           count++;
+        }
+    }
 
+    tx_estring_value.append("T:");
+    tx_estring_value.append(int(millis())); 
+    tx_estring_value.append("|C:");
+    tx_estring_value.append(getTempDegC()); 
+    tx_characteristic_string.writeValue(tx_estring_value.c_str());
+            
+    break;
+'''
+The following notification handler essentially partitioned the strings based off of the separating delimiter "|", and arranged the corresponding timestamps sand temperature readings into their respective lists:
 '''python
 async def get_temp_5s(uuid,byte_array):
     global time_millis
@@ -123,6 +155,39 @@ async def get_temp_5s(uuid,byte_array):
         time_millis.append(time[2::])
         temp_celsius.append(temp[2::])
 '''
+![Get Temp 5s](_images/GET_TEMP_5s.png))
+
+The next command, GET_TEMP_5s_RAPID, then put the sampling and communication rate to the test by sending rapidly sampled timestamped temperatures over a period of five seconds. To ensure that the string did not exceed the maximum byte size limit of 150 (151 including the null terminal character), the characteristic string value was periodically sent out and cleared to avoid indexing outside of the character array size and a secondary check for the byte size of the string was checked before appending other characters. Note that since characters are encoded via ASCII, each char value only takes up 1 byte of space. Hence, the length of the string essentially dictates the byte size of the characteristic value. This is demonstrated below:
+'''cpp
+case GET_TEMP_5s_RAPID:
+    int rapid_prev;
+    int rapid_count;
+            
+    // Write string back
+    tx_estring_value.clear();
+    rapid_prev = millis();
+    rapid_count = 0;
+            
+    while(millis() - rapid_prev < 5000){
+        tx_estring_value.append("T:");
+        tx_estring_value.append(int(millis())); 
+        tx_estring_value.append("|C:");
+        tx_estring_value.append(getTempDegC());
+        if (rapid_count >= 5 || tx_estring_value.get_length() >= MAX_MSG_SIZE - 50 ) {
+            rapid_count = 0;
+            tx_characteristic_string.writeValue(tx_estring_value.c_str());
+            tx_estring_value.clear();
+        } 
+        else {
+            tx_estring_value.append("|");
+            rapid_count++;
+        }
+     }
+     tx_estring_value.clear();
+            
+     break;
+'''
+The corresponding notification handler in Python simply took the same strategy as before with GET_TEMP_5s, but the key difference was that the lists of values were continually appended until the five second time interval has ended. 
 '''python
 async def get_temp_5s_rapid(uuid,byte_array):
     global time_millis
@@ -136,7 +201,11 @@ async def get_temp_5s_rapid(uuid,byte_array):
         time_millis.append(time[2::])
         temp_celsius.append(temp[2::])
 '''
+This successfully resulted in nearly a thousand recorded values, as shown below:
+![Get Temp 5s Rapid](_images/GET_TEMP_5s_RAPID.png)
 
+## Limitations:
 
-## Limitation:
+Although communicating over Bluetooth has proven to be very fast in transmitting and receiving rapidly sampled data, it is important to note that the rate data must be sent out must keep up with the rate that data is being collected, otherwise the remaining data must wait in the onboard memory of the Artemis until it is sent out. This is actually a pretty significant issue, since a substantial proportion of the processing power of the Artemis board will not be dedicated to communication, as it will be needed to properly localize and control the robot. We would therefore expect most data to sit in memory and get flushed out in chunks to the computer. Thankfully, the Artemis board has a substantial amount of RAM of 384 kB, but this too will eventually run out over a long enough period of time. 
 
+To provide some example estimates of the limitations of the Artemis board's memory, sampling data at 150 Hz consisting of single byte (8-bit) datatypes such as chars to last for about 2.56 seconds, two byte (16-bit) datatypes such as short to last for about 1.28 seconds, and four byte (32-bit) datatypes  such as single-precision float and integers to last for about 0.64 seconds, and eight byte (64-bit) datatypes  such as double-precision float and long to last for about 0.32 seconds. Of course, sampling at even higher rates for higher bandwidth control loops. However, given that most motors operate at a control loop bandwidth in the hundreds of Hz range, these estimates at 150 Hz should give a more or less accurate order of magnitude guess for the maximum storage limit of different datatypes. We would therefore need to continually send values at least every second (or possibly faster) to ensure that the Artemis board does not run into any fatal memory issues. 
