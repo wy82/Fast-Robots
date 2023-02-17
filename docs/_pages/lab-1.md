@@ -1,6 +1,8 @@
 ---
 permalink: /lab-1/
-title: "Lab 1"
+title: "Lab 1: The Artemis Board"
+sidebar:
+  nav: "lab-1"
 ---
 This lab was basically just an introduction to the Artemis Nano and the Arduino IDE. I mainly just ran example programs from the Arduino IDE to test some basic functionality.
 

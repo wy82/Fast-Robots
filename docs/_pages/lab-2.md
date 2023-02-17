@@ -1,6 +1,8 @@
 ---
 permalink: /lab-2/
-title: "Lab 2"
+title: "Lab 2: Bluetooth Communication"
+sidebar:
+  nav: "lab-2"
 ---
 This lab was dedicated to establishing a wireless connection from my personal laptop to the Artemis Nano via the Bluetooth Low Energy (BLE) protocol. 
 

@@ -5,3 +5,55 @@ main:
     url: /lab-2/
   - title: "Lab 3"
     url: /lab-3/
+
+lab-1:
+  - title: "Lab 1"
+    children:
+      - title: "Example 1"
+        url: /lab-1/#example-1
+      - title: "Example 2"
+        url: /lab-1/#example-2
+      - title: "Example 3"
+        url:  /lab-1/#example-3
+      - title: "Example 4"
+        url: /lab-1/#example-4
+
+lab-2:
+  - title: "Lab 2"
+    children:
+      - title: "Setup"
+        url: /lab-2/#setup
+      - title: "Codebase"
+        url: /lab-2/#codebase
+      - title: "Demo"
+        url: /lab-2/#demo
+      - title: "Echo Command"
+        url: /lab-2/#echo-command
+      - title: "Get Time Commmand"
+        url: /lab-2/#get-time-command/
+      - title: "Setting up a Notification Handler"
+        url: /lab-2/#setting-up-a-notification-handler
+      - title: "Get Temperature Command"
+        url: /lab-2/#get-temperature-command
+      - title: "Limitations"
+        url: /lab-2/#limitations
+lab-3:
+  - title: "Lab 3"
+    children:
+      - title: "Setup"
+        url: /lab-2/#setup
+      - title: "Codebase"
+        url: /lab-2/#codebase
+      - title: "Demo"
+        url: /lab-2/#demo
+      - title: "Echo Command"
+        url: /lab-2/#echo-command
+      - title: "Get Time Commmand"
+        url: /lab-2/#get-time-command
+      - title: "Setting up a Notification Handler"
+        url: /lab-2/#setting-up-a-notification-handler
+      - title: "Get Temperature Command"
+        url: /lab-2/#get-temperature-comman/
+      - title: "Limitations"
+        url: /lab-2/#limitations
+

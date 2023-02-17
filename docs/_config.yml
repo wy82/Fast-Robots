@@ -1,7 +1,6 @@
 title: Fast Robots
 email: wy82@cornell.edu
-description: >- 
-        A documentation of projects in ECE 4160: Fast Robots (Spring 2023).
+description: "A documentation of projects in ECE 4160: Fast Robots (Spring 2023)."
 domain: "wy82.github.io"
 baseurl: "/Fast-Robots"
 url: "https://wy82.github.io" 
@@ -36,4 +35,3 @@ defaults:
     values:
       layout: single
       classes: wide
-      author_profile: true
