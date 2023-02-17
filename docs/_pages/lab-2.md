@@ -2,7 +2,9 @@
 permalink: /lab-2/
 title: "Lab 2"
 ---
-This lab was dedicated to establishing a wireless connection from my personal laptop to the Artemis Nano via the Bluetooth Low Energy (BLE) protocol. The main objective in doing so is to setup an efficient way to monitor and debug the sensors and actuators of the robot, and to allow for computational offloading of control actions. 
+This lab was dedicated to establishing a wireless connection from my personal laptop to the Artemis Nano via the Bluetooth Low Energy (BLE) protocol. 
+
+The main objective in doing so is to setup an efficient way to monitor and debug the sensors and actuators of the robot, and to allow for computational offloading of control actions. 
 
 ## Setup:
 To start off, I created a Python virtual environment dedicated to installing and running python packages related to the BLE protocol:
@@ -43,20 +45,31 @@ The successful connection can then be observed below:
 ![Connection](/lab-2-assets/connection.png)
 
 ## Codebase:
-In short, the Bluetooth protocol mainly consists of peripheral devices such as the Artemis Nano that advertise services, each of which contain various characteristics that hold 512 byte values. To identify a particular service or characteristic, the protocol uses binary numbers known as a Universal Unique Identifier (UUID). 
+In short, the Bluetooth protocol mainly consists of peripheral devices such as the Artemis Nano that advertise services, each of which contain various characteristics that hold 512 byte values. 
+To identify a particular service or characteristic, the protocol uses a specific bit string known as a Universal Unique Identifier (UUID). 
 
-The code necessary to establish the Bluetooth connection contained quite a lot of different parts, both for the laptop and on the Artemis Nano. The laptop files included a connections.yaml file for recording the MAC address and a service UUID to connect to the Artemis Nano with, as well as characteristic UUIDs for receiving and transmitting data. A second file, cmd_types.py, contained a Python enum datastructure for storing specific Bluetooth command names listed by number. 
+The code necessary to establish the Bluetooth connection contained quite a lot of different parts, both for the laptop and on the Artemis Nano. 
+The laptop files included a connections.yaml file for recording the MAC address and a service UUID to connect to the Artemis Nano with, as well as characteristic UUIDs for receiving and transmitting data. 
+A second file, cmd_types.py, contained a Python enum datastructure for storing specific Bluetooth command names listed by number. 
 
-Besides these simpler accessory files, the python code responsible for doing the heavy lifting was left to ble_base.py and ble.py, which are modules that setup the groundwork to build a user-friendly BLEController class that can easily connect/disconnect and send/receive data. Most importantly, the class also offers the freedom to write notification handlers that will be called whenever the computer receives data through a particular characteristic UUID, which helps facilitate asynchronous data collection. Finally, a couple other printing and logging features are left in a utils.py script to better record and organize events that occur while using the Bluetooth connection.
+![Python Files](/lab-2-assets/Python_Files.png)
+
+Besides these simpler accessory files, the Python code responsible for doing the heavy lifting was left to ble_base.py and ble.py, which are modules that setup the groundwork to build a user-friendly BLEController class that can easily connect/disconnect and send/receive data. 
+Most importantly, the class also offers the freedom to write notification handlers that will be called whenever the computer receives data through a particular characteristic UUID, which helps facilitate asynchronous data collection. 
+Finally, a couple other printing and logging features are left in a utils.py script to better record and organize events that occur while using the Bluetooth connection.
 
 A somewhat similar code setup is also burned onto the Artemis Nano, which consists of a ble_arduino.ino file recording the UUIDs and enumerated command types, as well as a command handler executed with a specific response to each command. This script is also used to advertise the Bluetooth service, setup the relevant characteristics, and read out the MAC address of the Artemis Nano. 
 
-A few other header files including BLECStringCharacteristic.h, EString.h, and RobotCommand.h define classes that are used to handle the characteristic data in cases that are not covered by the ArduinoBLE library. In particular, the BLECStringCharacterstic.h and RobotCommand files are dedicated specifically for formatting and parsing string characterstics and robot commands, whereas EString.h mainly just holds a bunch of helper functions to make string manipulation (technically on character arrays) a bit easier. 
+![Arduino Files](/lab-2-assets/Arduino_Files.png)
+
+A few other header files including BLECStringCharacteristic.h, EString.h, and RobotCommand.h define classes that are used to handle the characteristic data in cases that are not covered by the ArduinoBLE library. 
+In particular, the BLECStringCharacterstic.h and RobotCommand files are dedicated specifically for formatting and parsing string characterstics and robot commands, whereas EString.h mainly just holds a bunch of helper functions to make string manipulation (technically on character arrays) a bit easier. 
 
 ## Configurations:
 As mentioned before, the first step in establishing the Bluetooth connection was to ensure that the configurations were consistent across both devices. This included the UUIDs and command types:
 
 ![Python UUID](/lab-2-assets/Python_UUID.png)
+
 ![Arduino UUID](/lab-2-assets/Arduino_UUID.png)
 
 ![Connection](/lab-2-assets/Python_cmd_types.png)
@@ -68,6 +81,7 @@ Admittedly, the list of command types was a bit longer than necessary, which was
 The next step was to run a simple demo of basic Bluetooth commands, which mainly consisted of sending and receiving strings, integers, and floating point values::
 
 ![Python Demo](/lab-2-assets/Python_Demo.png)
+
 ![Arduino Demo](/lab-2-assets/Arduino_Demo.png)
 
 ## Echo Command:
@@ -174,7 +188,7 @@ async def get_temp_5s(uuid,byte_array):
         temp_celsius.append(temp[2::])
 ```
 
-![Get Temp 5s](/lab-2-assets/GET_TEMP_5s.png))
+![Get Temp 5s](/lab-2-assets/GET_TEMP_5s.png)
 
 The next command, GET_TEMP_5s_RAPID, then put the sampling and communication rate to the test by sending rapidly sampled timestamped temperatures over a period of five seconds. To ensure that the string did not exceed the maximum byte size limit of 150 (151 including the null terminal character), the characteristic string value was periodically sent out and cleared to avoid indexing outside of the character array size and to avoid using up too much onboard RAM. 
 
@@ -230,12 +244,23 @@ This successfully resulted in nearly a thousand recorded values, as shown below:
 
 ![Get Temp 5s Rapid](/lab-2-assets/GET_TEMP_5s_RAPID.png)
 
+![Get Temp 5s Rapid Result](/lab-2-assets/GET_TEMP_5s_RAPID_Result.png)
+
 ## Limitations:
 
-Although communicating over Bluetooth has proven to be very fast in transmitting and receiving rapidly sampled data, it is important to note that the rate data must be sent out must keep up with the rate that data is being collected, otherwise the remaining data must wait in the onboard memory of the Artemis until it is sent out. 
+Although communicating over Bluetooth has proven to be great at real-time communication, it is important to note that the rate is limited by how often the Artemis board can update the characteristic values rather than how fast it takes to send the data once the characteristics have been updated.
 
-This is actually a pretty significant issue, since a substantial proportion of the processing power of the Artemis board will not be dedicated to communication, as it will be needed to properly localize and control the robot. We would therefore expect most data to sit in memory and get flushed out in chunks to the computer. Thankfully, the Artemis board has a substantial amount of RAM of 384 kB, but this too will eventually run out over a long enough period of time. 
+This is actually a pretty significant issue, since a substantial proportion of the processing power of the Artemis board will not be dedicated to communication, as it will be needed to properly localize and control the robot. We would therefore require data to sit in memory and get flushed out in chunks to the computer rather than send data all the time. Thankfully, the Artemis board has a substantial amount of RAM of 384 kB, but this too will eventually run out over a long enough period of time. 
 
-To provide some example estimates of the limitations of the Artemis board's memory, sampling data at 150 Hz consisting of single byte (8-bit) datatypes such as chars to last for about 2.56 seconds, two byte (16-bit) datatypes such as short to last for about 1.28 seconds, and four byte (32-bit) datatypes  such as single-precision float and integers to last for about 0.64 seconds, and eight byte (64-bit) datatypes such as double-precision float and long to last for about 0.32 seconds. 
+To provide some example estimates of the limitations of the Artemis board's memory, a table of the maximum storage times for various C++ datatypes on the Artemis Nano is given, assuming that data is generated at a frequency of 150 Hz.
 
-Of course, sampling at even higher rates for higher bandwidth control loops. However, given that most motors operate at a control loop bandwidth in the hundreds of Hz range, these estimates at 150 Hz should give a more or less accurate order of magnitude guess for the maximum storage limit of different datatypes. We would therefore need to continually send values at least every second (or possibly faster) to ensure that the Artemis board does not run into any fatal memory issues. 
+| Byte Count  | C++ Datatypes (32-bit processor)  | Maximum Storage Time (s) |
+| ----------- | --------------------------------- | ------------------------ |
+| 1           | char                              | 2.56                     | 
+| 2           | short                             | 1.28                     |
+| 4           | single-precision float, int, long | 0.64                     |
+| 8           | double-precision float            | 0.32                     |
+
+Of course, sampling at even higher rates will result in even more limited storage times than what is shown in the table. However, given that most motors operate at a control loop bandwidth in the hundreds of Hz range, these estimates at 150 Hz should give a more or less accurate order of magnitude guess for the maximum storage limit of different datatypes. 
+
+We would therefore need to continually send values at least every second (or possibly faster) to ensure that the Artemis board does not run into any fatal memory issues.
