@@ -41,19 +41,17 @@ lab-3:
   - title: "Lab 3"
     children:
       - title: "Setup"
-        url: /lab-2/#setup
-      - title: "Codebase"
-        url: /lab-2/#codebase
-      - title: "Demo"
-        url: /lab-2/#demo
-      - title: "Echo Command"
-        url: /lab-2/#echo-command
-      - title: "Get Time Commmand"
-        url: /lab-2/#get-time-command
-      - title: "Setting up a Notification Handler"
-        url: /lab-2/#setting-up-a-notification-handler
-      - title: "Get Temperature Command"
-        url: /lab-2/#get-temperature-comman/
-      - title: "Limitations"
-        url: /lab-2/#limitations
+        url: /lab-3/#setup
+      - title: "Wiring"
+        url: /lab-3/#wiring
+      - title: "Sensor I2C Address"
+        url: /lab-3/#sensor-i2c-address
+      - title: "Characterizing the Sensor"
+        url: /lab-3/#characterizing-the-sensor
+      - title: "Using Two ToF Sensors"
+        url: /lab-3/#using-two-tof-sensors
+      - title: "Sensor Speed"
+        url: /lab-3/#sensor-speed
+      - title: "Bluetooth"
+        url: /lab-3/#bluetooth
 
