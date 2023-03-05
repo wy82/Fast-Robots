@@ -174,7 +174,7 @@ This allowed me to successfully read out both sensors:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/nOab0vJGLC8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-## Sensor Speed
+## Sensor Speed:
 
 The code I used so far to read from two ToF sensors essentially just waits for the sensor measurement to be sent over, and pauses all other tasks during this waiting period. Considering that the robot will need to run many tasks in the background besides simply reading sensor measurements, this is pretty inefficient.
 

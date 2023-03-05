@@ -5,7 +5,8 @@ main:
     url: /lab-2/
   - title: "Lab 3"
     url: /lab-3/
-
+  - title: "Lab 4"
+    url: /lab-4/
 lab-1:
   - title: "Lab 1"
     children:
@@ -54,4 +55,19 @@ lab-3:
         url: /lab-3/#sensor-speed
       - title: "Bluetooth"
         url: /lab-3/#bluetooth
+lab-4:
+  - title: "Lab 4"
+    children:
+      - title: "Setup"
+        url: /lab-3/#setups
+      - title: "Accelerometer"
+        url: /lab-3/#accelerometer
+      - title: "Gyroscope"
+        url: /lab-3/#gyroscope
+      - title: "Sample Data"
+        url: /lab-3/#sample-data
+      - title: "Battery"
+        url: /lab-3/#battery
+      - title: "RC Car"
+        url: /lab-3/#rc-car
 
