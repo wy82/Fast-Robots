@@ -9,6 +9,7 @@ github: [metadata]
 remote_theme: "mmistakes/minimal-mistakes@4.24.0"
 markdown: kramdown
 mathjax: true
+use_math: true
 minimal_mistakes_skin: dark
 include:
   - _pages
