@@ -38,8 +38,8 @@ $$
 \begin{align}
 a_x &= g\sin(\theta) \\
 a_z &= g\cos(\theta) \\
-\tan(\theta) &= \frac{a_x}{a_z} \\
-\theta &= \arctan(\frac{a_x}{a_z})
+\tan(\theta_a) &= \frac{a_x}{a_z} \\
+\theta_a &= \arctan(\frac{a_x}{a_z})
 \end{align}
 $$
 
@@ -49,8 +49,8 @@ $$
 \begin{align}
 a_y &= g\sin(\phi) \\
 a_z &= g\cos(\phi) \\
-\tan(\phi) &= \frac{a_y}{a_z} \\
-\phi &= \arctan(\frac{a_y}{a_z}) 
+\tan(\phi_a) &= \frac{a_y}{a_z} \\
+\phi_a &= \arctan(\frac{a_y}{a_z}) 
 \end{align}
 $$
 
@@ -143,30 +143,62 @@ This then produced the following plots:
 
 From here we observe that the noise appears to peak at around 30 Hz, although this is more pronounced only for the y and z axes. We also note that the noise reaches this peak somewhat gradually, so a lower cutoff frequency may also prove to be beneficial.
 
-
-From here we design the complementary low pass filter at 10 Hz:
+We then consider a complementary low pass filter, which is characterized by
 
 $$\begin{align}
-y[n] = \alpha y[] + (1-\alpha) y[]
+y_{LPF}[t+1] = \alpha y_{RAW}[t] + (1-\alpha) y_{LPF}[t]
 \end{align}$$
 
+Here, we note that the parameter $$\alpha$$ is given by
+
+$$\begin{align}
+   \alpha &= \frac{T_s}{T_s + 1/(2*\pi*f_c)}
+\end{align}$$
+
+Here, $$T_s$$ is the sampling period, or the reciprocal of sampling frequency. Since we would like a cutoff frequency of 10 Hz at a sampling frequency of 100 Hz, we should choose $\alpha = 0.239$
+
+From here we design the following complementary low pass filter, which has a cutoff frequency at 10 Hz:
+
+```cpp
+float aLPFPitch = 0;
+float getALPFPitch(ICM_20948_I2C *sensor){
+  float alpha = 0.239;
+  aLPFPitch = alpha*getAPitch(sensor) + (1-alpha)*aLPFPitch;
+  return aLPFPitch;
+}
+
+float aLPFRoll = 0;
+float getALPFRoll(ICM_20948_I2C *sensor){
+  float alpha = 0.239;
+  aLPFRoll = alpha*getARoll(sensor) + (1-alpha)*aLPFRoll;
+  return aLPFRoll;
+}
+```
+
+This yields the following output:
+
+![LPF](/lab-4-assets/LPF.png)
+ 
+From here we observe that the fluctuations in the graph have been somewhat smoothed out, although there is still a noticeable amount of noise.
 
 ## Gyroscope:
 
 In order to fully estimate the angular orientation, we instead try an dead-reckoning approach with the gyroscope. To accomplish this, we note that
 
 $$\begin{align}
-  \theta(t) &= \theta(0) + \int g_x\;dt \\
-  \phi(t) &= \phi(0) + \int g_y\;dt \\
-  \psi(t) &= \psi(0) + \int g_z\;dt 
+  \theta_g(t) &= \theta_g(0) - \int g_x\;dt \\
+  \phi_g(t) &= \phi_g(0) - \int g_y\;dt \\
+  \psi_g(t) &= \psi_g(0) - \int g_z\;dt 
 \end{align}$$
+
+Note that since we use the right hand rule convention for positive angles, a negative sign is needed, as the gyroscope has a different sign convention.
 
 However, because we are working with discrete samples in time, we use the following approximation:
 
 $$\begin{align}
-  \theta\[t\] &= \theta\[t-1\] + g_x\delta t \\
-  \phi\[t\] &= \psi\[t-1\] + g_y\delta t \\
-  \psi\[t\] &= \psi\[t-1\] + g_z\delta t 
+  \theta_g\[t\] &= \theta_g\[t-1\] - g_x\delta t \\
+  \phi_g\[t\] &= \psi_g\[t-1\] - g_y\delta t \\
+  \psi_g\[t\] &= \psi_g\[t-1\] - g_z\delta t 
 \end{align}$$
 
 We then implement this into code:
@@ -178,7 +210,7 @@ float getGPitch(ICM_20948_I2C *sensor){
   current = millis();
   float dt = (float) (current - prevPitchTime)/1000.0;
   prevPitchTime = current;
-  gPitch = gPitch + dt*sensor->gyrX();
+  gPitch = gPitch - dt*sensor->gyrX();
   return gPitch;
 }
 
@@ -188,7 +220,7 @@ float getGRoll(ICM_20948_I2C *sensor){
   current = millis();
   float dt = (float) (millis() - prevRollTime)/1000.0;
   prevRollTime = current;
-  gRoll = gRoll + dt*sensor->gyrY();
+  gRoll = gRoll - dt*sensor->gyrY();
   return gRoll;
 }
 
@@ -198,7 +230,7 @@ float getGYaw(ICM_20948_I2C *sensor){
   current = millis();
   float dt = (float) (millis() - prevYawTime)/1000.0;
   prevYawTime = current;
-  gYaw = gYaw + dt*sensor->gyrZ();
+  gYaw = gYaw - dt*sensor->gyrZ();
   return gYaw;
 }
 ```
@@ -217,13 +249,56 @@ However, we do notice that the gyroscope readings sometimes result in a somewhat
 
 As is usually the case with dead-reckoning methods, the errors from noise in the gyroscope readings and inaccuracies in the time interval measurements accrue over time. This then results in the calculated angles becoming increasingly more inaccurate with time, resulting in the observed drift.
 
-To improve the accuracy beyond the individual accelerometer and gyroscope measurements, we implement a complementary filter that combines both the angular estimates for pitch and roll from the accelerometer:
+Furthermore, we note that the drift does not lessen with slower sampling rates, and instead, the noise increases:
+
+![Delay](/lab-4-assets/Delay.png)|
+
+Therefore to minimize drift, we simply sample without delay to maximize the sampling rate and hence the accuracy in measurements.
+
+To improve the accuracy beyond the individual accelerometer and gyroscope measurements, we implement a complementary filter that combines both the angular estimates for pitch and roll from the (filtered) accelerometer and gyroscope:
+
+$$\begin{align}
+\theta &= \alpha\theta_{a,LPF} + \theta_g(1-\alpha) \\
+\phi &= \alpha\phi_{a,LPF} + \phi_g(1-\alpha) 
+\end{align}$$
+
+We then implement this in code via the following:
+
+```cpp
+float getAGPitch(ICM_20948_I2C *sensor){
+  float alpha = 0.9;
+  return alpha*getALPFPitch(sensor) + (1-alpha)*getGPitch(sensor);
+}
+
+float getAGRoll(ICM_20948_I2C *sensor){
+  float alpha = 0.9;
+  return alpha*getALPFRoll(sensor) + (1-alpha)*getGRoll(sensor);
+}
+```
+
+Here, we use $\alpha = 0.95$ to weight the accelerometer readings more heavily, as a means of cancelling out the loss in accuracy from the drift in the gyroscope readings. The resulting measurement is somewhat less noisier than the individual accelerometer readings, and more accurate than the gyroscope readings:
+
+ -90 Degrees Filtered Pitch                                 | 90 Degrees Filtered Pitch
+:----------------------------------------------------------:|:--------------------------------------------------------:
+![-90 Complementary Pitch](/lab-4-assets/n90_Comp_Pitch.png)|![90 Complementary Pitch](/lab-4-assets/90_Comp_Pitch.png)
+
+ -90 Degrees Filtered Roll                                | 90 Degrees Filtered Roll
+:--------------------------------------------------------:|:-------------------------------------------------------:
+![-90 Complementary Roll](/lab-4-assets/n90_Comp_Roll.png)|![90 Complementary Roll](/lab-4-assets/90_Comp_Roll.png)
+
+
+ 0 Degrees Pitch/Roll                                             |   
+:----------------------------------------------------------------:|
+![0 Complementary Pitch/Roll](/lab-4-assets/0_Comp_Pitch_Roll.png)|
+
+We then obtain the following data:
+
 
 
 
 ## Sample Data:
 
-To speed up the sampling rate, we use the following loop, which samples data when the sensor is ready:
+To speed up the sampling rate, we use the following loop, which samples data only when the sensor is ready:
 
 ```cpp
 
