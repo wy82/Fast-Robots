@@ -152,7 +152,7 @@ y_{LPF}[t+1] = \alpha y_{RAW}[t] + (1-\alpha) y_{LPF}[t]
 Here, we note that the parameter $$\alpha$$ is given by
 
 $$\begin{align}
-   \alpha &= \frac{T_s}{T_s + 1/(2*\pi*f_c)}
+   \alpha &= \frac{T_s}{T_s + 1/(2\pif_c)}
 \end{align}$$
 
 Here, $$T_s$$ is the sampling period, or the reciprocal of sampling frequency. Since we would like a cutoff frequency of 10 Hz at a sampling frequency of 100 Hz, we should choose $\alpha = 0.239$
@@ -196,9 +196,9 @@ Note that since we use the right hand rule convention for positive angles, a neg
 However, because we are working with discrete samples in time, we use the following approximation:
 
 $$\begin{align}
-  \theta_g\[t\] &= \theta_g\[t-1\] - g_x\delta t \\
-  \phi_g\[t\] &= \psi_g\[t-1\] - g_y\delta t \\
-  \psi_g\[t\] &= \psi_g\[t-1\] - g_z\delta t 
+  \theta_g[t] &= \theta_g[t-1] - g_x\delta t \\
+  \phi_g[t] &= \psi_g[t-1] - g_y\delta t \\
+  \psi_g[t] &= \psi_g[t-1] - g_z\delta t 
 \end{align}$$
 
 We then implement this into code:
