@@ -59,15 +59,15 @@ lab-4:
   - title: "Lab 4"
     children:
       - title: "Setup"
-        url: /lab-3/#setups
+        url: /lab-4/#setup
       - title: "Accelerometer"
-        url: /lab-3/#accelerometer
+        url: /lab-4/#accelerometer
       - title: "Gyroscope"
-        url: /lab-3/#gyroscope
+        url: /lab-4/#gyroscope
       - title: "Sample Data"
-        url: /lab-3/#sample-data
+        url: /lab-4/#sample-data
       - title: "Battery"
-        url: /lab-3/#battery
+        url: /lab-4/#battery
       - title: "RC Car"
-        url: /lab-3/#rc-car
+        url: /lab-4/#rc-car
 
