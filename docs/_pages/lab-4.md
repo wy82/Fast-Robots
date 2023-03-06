@@ -196,9 +196,9 @@ Note that since we use the right hand rule convention for positive angles, a neg
 However, because we are working with discrete samples in time, we use the following approximation:
 
 $$\begin{align}
-  \theta_g[t] &= \theta_g[t-1] - g_x\delta t \\
-  \phi_g[t] &= \psi_g[t-1] - g_y\delta t \\
-  \psi_g[t] &= \psi_g[t-1] - g_z\delta t 
+  \theta_g[t] &= \theta_g[t-1] - g_x\Delta t \\
+  \phi_g[t] &= \psi_g[t-1] - g_y\Delta t \\
+  \psi_g[t] &= \psi_g[t-1] - g_z\Delta t 
 \end{align}$$
 
 We then implement this into code:
@@ -508,5 +508,9 @@ After setting up the batteries, we then test out the car with a remote control t
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UkBjY3UNdhM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-The Artemis board and sensor setup was then strapped to the car, where the sensor data was sent via Bluetooth during the figure-eight stunts:
+The Artemis board and sensor setup was then strapped to the car, where the sensor data was sent via Bluetooth during a simple stunt involving a skidding spin::
+
+![Tof Bluetooth](/lab-4-assets/Tof_Bluetooth.png)
+![Accel_Bluetooth](/lab-4-assets/Accel_Bluetooth.png)
+![Gyro_Bluetooth](/lab-4-assets/Gyro_Bluetooth.png)
 
