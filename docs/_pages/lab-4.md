@@ -299,8 +299,36 @@ While the sensor measurements produce smoother transitions in value and less dri
 To speed up the sampling rate, we use the following loop, which samples data only when the sensor is ready:
 
 ```cpp
+#define MAX_SIZE 1000;
+float ax[MAX_SIZE];
+float ay[MAX_SIZE];
+float az[MAX_SIZE];
+float gx[MAX_SIZE];
+float gy[MAX_SIZE];
+float gz[MAX_SIZE];
+int idx = 0;
+int s = 0;
 
+void loop()
+{
+
+  if (myICM.dataReady() && idx < WINDOW_SIZE)
+  {
+    Serial.println(millis()-s);
+    s = millis();
+    myICM.getAGMT();
+    ax[idx] = (&myICM)->accX();
+    ay[idx] = (&myICM)->accY();
+    az[idx] = (&myICM)->accZ();
+    gx[idx] = (&myICM)->gyrX();
+    gy[idx] = (&myICM)->gyrX();
+    gz[idx] = (&myICM)->gyrX();
+    idx++;
+  }
+}
 ```
+
+From here we find that the time between each measurement is roughly 2 to 3 milliseconds, indicating a sampling rate of about 333 to 500 Hz. Admittedly, printing the value to the Serial Monitor adds a small delay, meaning that this measurement is a slight overestimate.
 
 To minimize the latency between sensor measurements, the Arduino code used to send the data was then split into two parts - one for collecting data and one for sending the data:
 
@@ -476,4 +504,9 @@ The battery setup is shown below:
 
 ## RC Car: 
 
+After setting up the batteries, we then test out the car with a remote control to get a feel for its speed and manueverability on a laminate floor:
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UkBjY3UNdhM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+The Artemis board and sensor setup was then strapped to the car, where the sensor data was sent via Bluetooth during the figure-eight stunts:
+
