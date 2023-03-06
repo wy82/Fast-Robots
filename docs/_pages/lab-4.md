@@ -266,17 +266,17 @@ We then implement this in code via the following:
 
 ```cpp
 float getAGPitch(ICM_20948_I2C *sensor){
-  float alpha = 0.9;
+  float alpha = 0.5;
   return alpha*getALPFPitch(sensor) + (1-alpha)*getGPitch(sensor);
 }
 
 float getAGRoll(ICM_20948_I2C *sensor){
-  float alpha = 0.9;
+  float alpha = 0.5;
   return alpha*getALPFRoll(sensor) + (1-alpha)*getGRoll(sensor);
 }
 ```
 
-Here, we use $\alpha = 0.95$ to weight the accelerometer readings more heavily, as a means of cancelling out the loss in accuracy from the drift in the gyroscope readings. The resulting measurement is somewhat less noisier than the individual accelerometer readings, and more accurate than the gyroscope readings:
+Here, we use $\alpha = 0.5$ to weigh the accelerometer readings more heavily to prevent drift. The resulting measurement is somewhat less noisier and less susceptible to drift and vibrations compared to the individual sensor readings: 
 
  -90 Degrees Filtered Pitch                                 | 90 Degrees Filtered Pitch
 :----------------------------------------------------------:|:--------------------------------------------------------:
@@ -291,9 +291,7 @@ Here, we use $\alpha = 0.95$ to weight the accelerometer readings more heavily, 
 :----------------------------------------------------------------:|
 ![0 Complementary Pitch/Roll](/lab-4-assets/0_Comp_Pitch_Roll.png)|
 
-We then obtain the following data:
-
-
+While the sensor measurements produce smoother transitions in value and less drift, we also note that its effective range seems somewhat reduced, as the measurements near the ends of the range at -90 and 90 degrees are offset by about 10 degrees or more. The new effective range is no more than $$(80 - 70)) = 150$$ degrees for pitch and roll, where the new two-point calibration factor is then about $$\alpha = 1.2$$.
 
 
 ## Sample Data:
