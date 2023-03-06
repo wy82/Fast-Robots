@@ -508,9 +508,14 @@ After setting up the batteries, we then test out the car with a remote control t
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UkBjY3UNdhM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-The Artemis board and sensor setup was then strapped to the car, where the sensor data was sent via Bluetooth during a simple stunt involving a skidding spin::
+The Artemis board and sensor setup was then strapped to the car, where the sensor data was sent via Bluetooth during a simple stunt involving a skidding spin:
 
-![Tof Bluetooth](/lab-4-assets/Tof_Bluetooth.png)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LLiY507g0sE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+Plots of the collected sensor data are included below:
+
+![ToF Bluetooth](/lab-4-assets/ToF_Bluetooth.png)
 ![Accel_Bluetooth](/lab-4-assets/Accel_Bluetooth.png)
 ![Gyro_Bluetooth](/lab-4-assets/Gyro_Bluetooth.png)
 
+Because the sensor recording started a bit too early, most of the action really happens in the last second. We can see that the accelerometer and gyroscope data clearly indicate significant amounts of translational and angular movement. We also observe that the time of flight sensors indicate some change in distance to the surroundings, although this is somewhat less meaningful since the sensors were not securely mounted onto the robot.
