@@ -258,11 +258,11 @@ To provide some example estimates of the limitations of the Artemis board's memo
 
 | Byte Count  | C++ Datatypes (32-bit processor)  | Maximum Storage Time (s) |
 | ----------- | --------------------------------- | ------------------------ |
-| 1           | char                              | 2.56                     | 
-| 2           | short                             | 1.28                     |
-| 4           | single-precision float, int, long | 0.64                     |
-| 8           | double-precision float            | 0.32                     |
+| 1           | char                              | 2621.44                  | 
+| 2           | short                             | 1310.72                  |
+| 4           | single-precision float, int, long | 655.36                   |
+| 8           | double-precision float            | 296.96                   |
 
 Of course, sampling at even higher rates will result in even more limited storage times than what is shown in the table. However, given that most motors operate at a control loop bandwidth in the hundreds of Hz range, these estimates at 150 Hz should give a more or less accurate order of magnitude guess for the maximum storage limit of different datatypes. 
 
-We would therefore need to continually send values at least every second (or possibly faster) to ensure that the Artemis board does not run into any fatal memory issues.
+Since most sensor measurements are stored in either float or integer values, we would need to continually send values once every 10 minutess (or possibly faster) to ensure that the Artemis board does not run into any fatal memory issues.
