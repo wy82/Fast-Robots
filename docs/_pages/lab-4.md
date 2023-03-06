@@ -466,6 +466,14 @@ Assuming a sampling rate of 150 Hz, we then find that the Artemis board can stor
 
 ## Battery:
 
+Next, we setup the batteries for the robot, which are divided into a 3.7 V 650 mAh LiPo battery for the Artemis Board and a 3.7 V 850 mAh LiPo battery to drive the motors. 
+
+The main advantages in setting up separate power supplies is to ensure a higher power output and lifetime for the motor power supply, which will draw much more current than the Artemis board needs to.Another benefit would be to possibly avoid ground loops and the possible addition of interference from the motors due to uneven loads on the power supply.
+
+The battery setup is shown below:
+
+![Battery](/lab-4-assets/Battery.png)
+
 ## RC Car: 
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UkBjY3UNdhM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
