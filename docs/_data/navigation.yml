@@ -7,6 +7,8 @@ main:
     url: /lab-3/
   - title: "Lab 4"
     url: /lab-4/
+  - title: "Lab 5"
+    url: /lab-5/
 lab-1:
   - title: "Lab 1"
     children:
@@ -18,7 +20,6 @@ lab-1:
         url:  /lab-1/#example-3
       - title: "Example 4"
         url: /lab-1/#example-4
-
 lab-2:
   - title: "Lab 2"
     children:
@@ -70,4 +71,15 @@ lab-4:
         url: /lab-4/#battery
       - title: "RC Car"
         url: /lab-4/#rc-car
-
+lab-5:
+  - title: "Lab 5"
+    children:
+      - title: "Setup"
+        url: /lab-5/#setup
+      - title: "Wiring"
+        url: /lab-5/#wiring
+      - title: "Motor Drivers"
+        url: /lab-5/#motor-drivers
+      - title: "Calibration"
+        url: /lab-5/#calibration
+      - title: "Open Loop Control"
