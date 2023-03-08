@@ -8,13 +8,17 @@ In this lab, the motor drivers were installed, which allowed the Artemis board t
 
 ## Setup:
 
-Before the Artemis board can send commands to the motors, motor drivers (DRV8333) for each motor were installed. Although we are using motor drivers each with dual outputs, we connect two outputs in parallel to each of the motors to increase the maximum output current and power they can source. As shown in the diagram, we essentially short the outputs A and B for each motor driver. thes econnections are shown in the diagram below:
+Before the Artemis board can send commands to the motors, motor drivers (DRV8333) for each motor were installed. 
+
+Although we are using motor drivers each with dual outputs, we connect two outputs in parallel to each of the motors to increase the maximum output current and power they can source. As shown in the diagram, this essentially amounts to shorting the outputs A and B for each motor driver: 
  
 ![Wiring Diagram](/lab-5-assets/Wiring_Diagram.png)
 
 The Artemis board was then connected to the motor drivers via pins 4, A5, A15, and A16, all of which are hardware PWM pins capable of sending analog signals via analogWrite().
 
-In addition to the motor drivers, a separate 3.7 V 850 mAh battery was used to power the motor drivers and motors. The main advantages in doing so are a higher power output due to the lack of power regulation from the Artemis board. Furthermore, the higher battery capacity (850 mAh vs 650 mAh) provides a longer battery lifetime, allowing the motors to run for longer in general. Finally ,a separate power supply could potentially isolate the Artemis board from possibly power supply noise generated from the power draw of the motor.
+In addition to the motor drivers, a separate 3.7 V 850 mAh battery was used to power the motor drivers and motors. 
+
+The main advantages in doing so are a higher power output due to the lack of power regulation from the Artemis board. Furthermore, the higher battery capacity (850 mAh vs 650 mAh) provides a longer battery lifetime, allowing the motors to run for longer in general. Finally, a separate power supply could potentially isolate the Artemis board from possibly power supply noise generated from the power draw of the motor.
 
 ## Motor Drivers:
 
