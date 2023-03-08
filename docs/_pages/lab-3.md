@@ -102,72 +102,42 @@ SFEVL53L1X distanceSensor2(Wire, SHUTDOWN_PIN_2);
 I then set the pin values to rewrite the I2C address using the following in the setup() function:
 
 ```cpp
-void setup(void)
-{
-  Wire.begin();
-  Serial.begin(115200);
+// Make distance sensor addresses different at startup
+pinMode(SHUTDOWN_PIN_1, OUTPUT);
+pinMode(SHUTDOWN_PIN_2, OUTPUT);
 
-  // Make distance sensor addresses different at startup
-  pinMode(SHUTDOWN_PIN_1, OUTPUT);
-  pinMode(SHUTDOWN_PIN_2, OUTPUT);
+digitalWrite(SHUTDOWN_PIN_1,LOW);
+digitalWrite(SHUTDOWN_PIN_2,HIGH);
 
-  digitalWrite(SHUTDOWN_PIN_1,LOW);
-  digitalWrite(SHUTDOWN_PIN_2,HIGH);
+distanceSensor2.setI2CAddress(NEW_ADDRESS);
 
-  distanceSensor2.setI2CAddress(NEW_ADDRESS);
+digitalWrite(SHUTDOWN_PIN_1,HIGH);
+digitalWrite(SHUTDOWN_PIN_2,HIGH);
 
-  digitalWrite(SHUTDOWN_PIN_1,HIGH);
-  digitalWrite(SHUTDOWN_PIN_2,HIGH);
-  
-  Serial.println("VL53L1X Qwiic Test");
-  if (distanceSensor1.begin() != 0) //Begin returns 0 on a good init
-  {
-    Serial.println("Sensor 1 failed to begin. Please check wiring. Freezing...");
-    while (1)
-      ;
-  }
-  if (distanceSensor2.begin() != 0) //Begin returns 0 on a good init
-  {
-    Serial.println("Sensor 2 failed to begin. Please check wiring. Freezing...");
-    while (1)
-      ;
-  }
-  Serial.println("Both sensors online!");
-
-  distanceSensor1.setDistanceModeShort();
-  distanceSensor2.setDistanceModeShort();
-}
+distanceSensor1.setDistanceModeShort();
+distanceSensor2.setDistanceModeShort();
 ```
 
 The main loop then set up the sensor measurements from each sensor, one at a time, and printed to the Serial Monitor:
 
 ```cpp
-void loop(void)
+distanceSensor1.startRanging(); //Write configuration bytes to initiate measurement
+while (!distanceSensor1.checkForDataReady())
 {
-  distanceSensor1.startRanging(); //Write configuration bytes to initiate measurement
-  while (!distanceSensor1.checkForDataReady())
-  {
-    delay(1);
-  }
-  int distance1 = distanceSensor1.getDistance(); //Get the result of the measurement from the sensor
-  distanceSensor1.clearInterrupt();
-  distanceSensor1.stopRanging();
-
-  Serial.print("Sensor 1 Distance (mm): ");
-  Serial.print(distance1);
-
-  distanceSensor2.startRanging(); //Write configuration bytes to initiate measurement
-  while (!distanceSensor2.checkForDataReady())
-  {
-    delay(1);
-  }
-  int distance2 = distanceSensor2.getDistance(); //Get the result of the measurement from the sensor
-  distanceSensor2.clearInterrupt();
-  distanceSensor2.stopRanging();
-
-  Serial.print(" | Sensor 2 Distance (mm): ");
-  Serial.println(distance2);
+  delay(1);
 }
+int distance1 = distanceSensor1.getDistance(); //Get the result of the measurement from the sensor
+distanceSensor1.clearInterrupt();
+distanceSensor1.stopRanging();
+
+distanceSensor2.startRanging(); //Write configuration bytes to initiate measurement
+while (!distanceSensor2.checkForDataReady())
+{
+  delay(1);
+}
+int distance2 = distanceSensor2.getDistance(); //Get the result of the measurement from the sensor
+distanceSensor2.clearInterrupt();
+distanceSensor2.stopRanging();
 ```
 
 This allowed me to successfully read out both sensors:
@@ -181,31 +151,22 @@ The code I used so far to read from two ToF sensors essentially just waits for t
 A more efficient loop can be found in the following code:
 
 ```cpp
-void loop(void)
-{
-  distanceSensor1.startRanging(); // Write configuration bytes to initiate measurement
-  distanceSensor2.startRanging(); // Write configuration bytes to initiate measurement
+distanceSensor1.startRanging(); // Write configuration bytes to initiate measurement
+distanceSensor2.startRanging(); 
     
-  while (!distanceSensor1.checkForDataReady() || !distanceSensor2.checkForDataReady())
-  {
+while (!distanceSensor1.checkForDataReady() || !distanceSensor2.checkForDataReady())
+{
      Serial.print("T:");
      Serial.println(millis());
-  }
-  
-  int distance1 = distanceSensor1.getDistance(); //Get the result of the measurement from the sensor
-  distanceSensor1.clearInterrupt();
-  distanceSensor1.stopRanging();
-
-  Serial.print("Sensor 1 Distance (mm): ");
-  Serial.print(distance1);
-  
-  int distance2 = distanceSensor2.getDistance(); //Get the result of the measurement from the sensor
-  distanceSensor2.clearInterrupt();
-  distanceSensor2.stopRanging();
-
-  Serial.print(" | Sensor 2 Distance (mm): ");
-  Serial.println(distance2);
 }
+  
+int distance1 = distanceSensor1.getDistance(); //Get the result of the measurement from the sensor
+distanceSensor1.clearInterrupt();
+distanceSensor1.stopRanging();
+  
+int distance2 = distanceSensor2.getDistance(); //Get the result of the measurement from the sensor
+distanceSensor2.clearInterrupt();
+distanceSensor2.stopRanging();
 ```
 
 Here, the main loop prints time stamps to the Serial Monitor instead of simply inserting delays. By moving the relevant tasks inside the loop, the loop can execute whatever tasks it needs while waiting for the sensor data to arrive. 
