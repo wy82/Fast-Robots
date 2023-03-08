@@ -76,10 +76,10 @@ lab-5:
     children:
       - title: "Setup"
         url: /lab-5/#setup
-      - title: "Wiring"
-        url: /lab-5/#wiring
       - title: "Motor Drivers"
         url: /lab-5/#motor-drivers
+      - title: "Wiring"
+        url: /lab-5/#wiring
       - title: "Calibration"
         url: /lab-5/#calibration
       - title: "Open Loop Control"
