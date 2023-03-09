@@ -22,7 +22,9 @@ The main advantages in doing so are a higher power output due to the lack of pow
 
 ## Motor Drivers:
 
-After soldering a motor driver to the Artemis board, the output was first measured via an oscilloscope. To ensure that the motor driver had a reasonable power supply, it was connected to a 3.7 V supply set to a current limit of 1.5 A: 
+After soldering a motor driver to the Artemis board, the output was first measured via an oscilloscope. 
+
+In setting the power supply for the motor driver, a constant voltage of 3.7V was set to simulate the battery voltage. To protect the motor driver, the current was limited to 1.5 A.  This may have been a tad low, since according to the [datasheet](https://cdn.sparkfun.com/assets/8/9/9/a/6/VL53L0X_DS.pdf), the paralleled outputs of the motor drivers are capable of sinking up to 3 to 4 A of current.
 
 ![Test Setup](/lab-5-assets/Test_Setup.png)
 
@@ -40,7 +42,7 @@ This then generated the following output:
 After the correct outputs from the motor driver were confirmed, the motor drivers were then soldered to the motor leads. To test that the motor could drive in both directions, the following PWM commands were used:
 
 ```cpp
-  // forward
+  // backwards 
   analogWrite(4,200);
   analogWrite(A5,0);
   delay(1000);
@@ -50,7 +52,7 @@ After the correct outputs from the motor driver were confirmed, the motor driver
   analogWrite(A5,255);
   delay(1000);
 
-  // backward
+  // forward
   analogWrite(4,0);
   analogWrite(A5,200);
   delay(1000);
@@ -61,10 +63,10 @@ After the correct outputs from the motor driver were confirmed, the motor driver
   delay(1000);
 ```
 
-This then resulted in the following reaction:
+This generated the following response:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/3VEBldo_y08" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
+\
 This process was then repeated for the second motor driver, and once both motor drivers were confirmed to work when connected to their respective motors, the 850 mAh battery was soldered to the drivers. After writing a somewhat similar set of PWM commands compared to before (alternating forward, braking, and backward commands) functionality of the entire control circuit was then tested:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/_4UBoPb1LRU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
@@ -87,19 +89,64 @@ Next, to ensure that the car was capable of moving along the ground, the followi
 
 ```cpp
 while(millis() - prev < 3000) {
-  analogWrite(A16,100);
   analogWrite(A15,0);
-  analogWrite(4,100);
-  analogWrite(A5,0);
+  analogWrite(A16,pwm);
+  analogWrite(4,0);
+  analogWrite(A5,pwm);
 }
+analogWrite(A15,255);
+analogWrite(A16,255);
+analogWrite(4,255);
+analogWrite(A5,255);
 ```
 
-After testing a few PWM values, it was found that the minimum PWM value required for the robot to still move was about .
+After testing a few PWM values, it was found that the minimum PWM value required for the robot to still move on the ground was about 30. 
 
-Finally, to ensure that the robot could move accurately in a straight line given the same PWM values for both motors, the script was run 
+However, during these measurements, it was observed that the robot would not move in a perfectly straight line and would deviate somewhat to the left. To address this error, a calibrating factor $$\alpha$$ was added to the program, which controlled the percent increase from the PWM value in the left motor and the percent decrease in the PWM value in the right motor from their respective nominal values:
 
-After a bit of tweaking, a conversion factor of $$\alpha = $ was found to correct the robot's path into a straigt line:
+```cpp
+analogWrite(A15,0);
+analogWrite(A16,round(pwm*(1.0+alpha)));
+analogWrite(4,0);
+analogWrite(A5,round(pwm*(1.0-alpha)));
+```
+
+After a bit of tweaking, a conversion factor of $$\alpha = 0.1$$ was found to correct the robot's path into a straight line, which can be seen in the following video, where the robot remains partially over the red line for up to 6 tiles (6 feet):
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GOKogz60PUc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ## Open Loop Control: 
 
+Finally, to demonstrate the open-loop control capabilities of the robot, a simple program that used commands to go forward and spin for various amounts of time was implemented:
+
+```cpp
+// forward
+analogWrite(A15, 0);
+analogWrite(A16,round(pwm_v*(1.0+alpha)));
+analogWrite(4,0);
+analogWrite(A5,round(pwm_v*(1.0-alpha)));
+delay(750);
+// turn CCW
+analogWrite(A15,round(pwm_w*(1.0+alpha)));
+analogWrite(A16,0);
+analogWrite(4,0);
+analogWrite(A5,round(pwm_w*(1.0-alpha)));
+delay(500);
+// forward
+analogWrite(A15,0);
+analogWrite(A16,round(pwm_v*(1.0+alpha)));
+analogWrite(4,0);
+analogWrite(A5,round(pwm_v*(1.0-alpha)));
+delay(1000);
+// turn CW
+analogWrite(A15,round(pwm_w*(1.0+alpha)));
+analogWrite(A16,0);
+analogWrite(4,round(pwm_w*(1.0-alpha)));
+analogWrite(A5,0);
+delay(500);
+```
+
+The effect of this was to basically go forward and do a fast U-turn in the middle:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MM08wuJVSTA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
