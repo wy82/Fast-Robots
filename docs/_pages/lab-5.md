@@ -24,7 +24,7 @@ The main advantages in doing so are a higher power output due to the lack of pow
 
 After soldering a motor driver to the Artemis board, the output was first measured via an oscilloscope. 
 
-In setting the power supply for the motor driver, a constant voltage of 3.7V was set to simulate the battery voltage. To protect the motor driver, the current was limited to 1.5 A.  This may have been a tad low, since according to the [datasheet](https://cdn.sparkfun.com/assets/8/9/9/a/6/VL53L0X_DS.pdf), the paralleled outputs of the motor drivers are capable of sinking up to 3 to 4 A of current.
+In setting the power supply for the motor driver, a constant voltage of 3.7V was set to simulate the battery voltage. To protect the motor driver, the current was limited to 1.5 A.  This may have been a tad too cautious, since according to the [datasheet](https://cdn.sparkfun.com/assets/8/9/9/a/6/VL53L0X_DS.pdf), the paralleled outputs of the motor drivers are capable of sinking up to 3 to 4 A of current.
 
 ![Test Setup](/lab-5-assets/Test_Setup.png)
 
@@ -42,25 +42,25 @@ This then generated the following output:
 After the correct outputs from the motor driver were confirmed, the motor drivers were then soldered to the motor leads. To test that the motor could drive in both directions, the following PWM commands were used:
 
 ```cpp
-  // backwards 
-  analogWrite(4,200);
-  analogWrite(A5,0);
-  delay(1000);
+// backwards 
+analogWrite(4,200);
+analogWrite(A5,0);
+delay(1000);
 
-  // stop
-  analogWrite(4,255);
-  analogWrite(A5,255);
-  delay(1000);
+// stop
+analogWrite(4,255);
+analogWrite(A5,255);
+delay(1000);
 
-  // forward
-  analogWrite(4,0);
-  analogWrite(A5,200);
-  delay(1000);
+// forward
+analogWrite(4,0);
+analogWrite(A5,200);
+delay(1000);
 
-  //stop
-  analogWrite(4,255);
-  analogWrite(A5,255);
-  delay(1000);
+//stop
+analogWrite(4,255);
+analogWrite(A5,255);
+delay(1000);
 ```
 
 This generated the following response:
@@ -138,7 +138,7 @@ analogWrite(A16,round(pwm_v*(1.0+alpha)));
 analogWrite(4,0);
 analogWrite(A5,round(pwm_v*(1.0-alpha)));
 delay(1000);
-// turn CW
+// turn CCW
 analogWrite(A15,round(pwm_w*(1.0+alpha)));
 analogWrite(A16,0);
 analogWrite(4,round(pwm_w*(1.0-alpha)));
