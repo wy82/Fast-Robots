@@ -4,7 +4,7 @@ title: "Lab 6: Closed-loop Control (PID)"
 sidebar:
   nav: "lab-6"
 ---
-The objective of this lab was to implement a simple PID controller for the robot, which controlled the robot's position from a wall at a setpoint of 200 mm.
+The objective of this lab was to implement a simple PID controller for the robot, which controlled the robot's position from a wall at a setpoint of 1 foot (roughly 304 mm) from the wall. 
 
 ## Setup:
 
@@ -46,7 +46,7 @@ if (myICM.dataReady() && distanceSensor1.checkForDataReady() && distanceSensor2.
 }
 ```
 
-Once the data was received on the laptop, it was subsequently processed into arrays in Python and then saved into a CSV file for future analysis.
+Once the data was received on the laptop, it was subsequently processed into arrays in Python and then saved into a PKL file for future analysis.
 
 ```python
 async def get_data(uuid,byte_array):
@@ -55,15 +55,6 @@ async def get_data(uuid,byte_array):
     global kp, ki, kd, motorl, motorr
     MAX_SIZE = 1000
     vecfloat = np.vectorize(lambda x: float(x[3::]))
-    
-    # save data
-    if len(motorl) >= MAX_SIZE:
-        with open(filename, 'ab') as file:
-            pickle.dump([time_millis,acc_mg,gyr_dps,depth1_mm,depth2_mm,kp,ki,kd,motorl,motorr], file)
-        time_millis = []
-        acc_mg,gyr_dps,depth1_mm,depth2_mm = [],[],[],[]
-        kp,ki,kd,motorl,motorr = [],[],[],[],[]
-        temp5s_str = ''
     
     # parse string
     temp5s_str = ble.bytearray_to_string(byte_array)
@@ -92,25 +83,42 @@ async def get_data(uuid,byte_array):
         kd.append(float(d[3::]))
         motorl.append(int(m[0][3::]))
         motorr.append(int(m[1][3::]))
+        
+    # save data 
+    if len(motorl) >= MAX_SIZE:
+        plotData()
+        with open(filename, 'ab') as file:
+            pickle.dump([time_millis,acc_mg,gyr_dps,depth1_mm,depth2_mm,kp,ki,kd,motorl,motorr], file)
+        time_millis = []
+        acc_mg,gyr_dps,depth1_mm,depth2_mm = [],[],[],[]
+        kp,ki,kd,motorl,motorr = [],[],[],[],[]
+        temp5s_str = ''
 ```
 
-Unfortunately, compiling all of the code and dependencies needed to facilitate Bluetooth communication on the Artemis required inconveniently large compile times. 
+Unfortunately, compiling all of the code and dependencies needed to facilitate Bluetooth communication on the Artemis required inconveniently large compile times, which could potentially last several minutes. 
 
-This would make testing various PID parameters somewhat painfully slow and inefficient, as there would otherwise essentially be a 5 minute wait time between each test run.
+This would make testing various PID parameters somewhat painfully slow and inefficient, which is especially inconvenient since manually tuning the controller to achieve optimized rise times and overshoot would require many repeated trials of precise gain adjustments.
 
-To circumvent this issue, a set of Bluetooth commands was developed that could be activated via keyboard commands on the laptop.
-
- This included simple commands for remote control access, activating various control modes, and tuning PID parameters: 
+To circumvent this issue, a set of Bluetooth commands was developed that could be activated via keyboard commands on the laptop, including simple commands for remote control access, activating the PID loop, and tuning PID parameters:
 
 ```python
+keyboard_input = keyboard.read_key()
+# movement using the WASD keys
+if keyboard_input == "w":
+    ble.send_command(CMD.FWD, "")
+elif keyboard_input == "s":
+    ble.send_command(CMD.BWD, "")
+elif keyboard_input == "a":
+    ble.send_command(CMD.LEFT, "")
+elif keyboard_input == "d":
+    ble.send_command(CMD.RIGHT, "")
+elif keyboard_input == "space":
+    ble.send_command(CMD.STOP, "")
+
 # PWM (or PID) tuning using the arrow keys
 elif keyboard_input == "up":
-    ble.send_command(CMD.P_CONTROL , "")
-elif keyboard_input == "down":
-    ble.send_command(CMD.PI_CONTROL , "")
-elif keyboard_input == "left":
     ble.send_command(CMD.PID_CONTROL , "")
-elif keyboard_input == "right":
+elif keyboard_input == "down":
     ble.send_command(CMD.STOP, "")
     ble.send_command(CMD.SEND , "")
 elif keyboard_input == "p":
@@ -131,21 +139,21 @@ The use of the nonstandard keyboard module and the general outline of the Python
 
 ## P Controller:
 
-In implementing a proportional (and eventually a PID controller), the following function was inserted into the control loop:
+To implement the PID controller, the following function was used as the PID loop for the robot.
 
 ```cpp
 float sum_error = 0;
 float prev_error = 0;
-float f_diff_error = 0;
-void pidcontrol(){
-  float setpoint = 200;
+float f_diff_error  = 0;
+void pidcontrol(){ 
+  float setpoint = 304;
   float windup_cap = 1000;
   float error = d2[previdx]-setpoint;
   if (abs(sum_error + error) <= windup_cap) {
     sum_error += error;
   }
   
-  float alpha = 0.5;
+  float alpha = 0.25;
   float diff_error = error - prev_error;
   prev_error = error;
   f_diff_error = alpha*diff_error + (1-alpha)*f_diff_error; 
@@ -154,9 +162,20 @@ void pidcontrol(){
   float i_term = KI*sum_error;
   float d_term = KD*f_diff_error;
   int pwm = round(p_term + i_term + d_term);
-  writepwm(pwm,pwm);
+  if (abs(pwm) <= 3){
+    analogWrite(A15,0);
+    analogWrite(A16,0);
+    analogWrite(4,0);
+    analogWrite(A5,0);
+  } else{
+    pwml = pwm;
+    pwmr = pwm;
+    writepwm(pwml,pwmr);
+  }
 }
 ```
+
+Note that we assume a constant and fast sampling rate, so the discrete sum of errors approximates the integral term and the discrete difference of errors approximates the derivative term.
 
 The loop relies on a helper function used to write PWM values to the motors:
 
@@ -184,7 +203,7 @@ Furthermore, to ensure that the PWM values would be rescaled outside of the moto
 
 ```cpp
 int rescalepwm(float pwm){
-  float deadband = 45;
+  float deadband = 40;
   return round((pwm+deadband)*225.0/255.0);
 }
 
@@ -198,41 +217,98 @@ int clippwm(int pwm){
 }
 ```
 
-To tune the controller, the proportional error gain was first adjusted such that the robot would begin to oscillate around the setpoint of 200 mm. This occured at around a gain of 1.1, as shown in the following:
+To tune the controller, we tune the proportional and integral gains first to gauge the minimum gain values that lead to instability. The derivative term is then set afterwards to reduce overshoot and make the controller robust to disturbances.
+
+Following this heuristic, the proportional error gain was first adjusted such that the robot would begin to oscillate around the setpoint of 304 mm, where the other gain values were set to 0. 
+
+This occured at around a gain of 0.2, as shown in the following:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/u1uavWQutMg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ![P Control](/lab-6-assets/pcontrol.png)
 
-From here it is clear that the robot manages to reach the setpoint quite closely within a few millimeters, but suffers from a significant overshoot. 
+From here it is clear that the robot manages to get close to the desired setpoint of 304 mm, but ends up at around 50 mm away from the desired setpoint.
 
-We also note that the robot seems to reach the setpoint somewhat slower as it gets closer to the wall. 
+We also observe that on the second time it passes the setpoint, it approaches the wall much slower than before, which is likely due to the low amounts of error.
 
-To address this issue, an integral term was then added, which could hopefully add an additional kick to the motors towards the end as the sum of the past errors would accrue to a large enough value:
+To provide a larger kick to the motors in the case where the robot strays too far from the setpoint for too long, an integral term might be more desirable.
 
 ## PI Controller:
 
-In tuning the PI controller, the proportional gain was scaled back by half to 0.055, and the integral gain was then increased unti la loss of stability was achieved:
+In tuning the PI controller, the proportional gain was scaled back by half to 0.1, and the integral gain was then increased until a loss of stability was achieved.
+
+This occurred at around a gain of 0.02:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/XdIC6-nzy8w" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ![PI Control](/lab-6-assets/picontrol.png)
 
-As shown in above, we see that the robot demonstrates significant oscillations around the setpoint, and approaches the setpoint much faster.
+As shown in above, we see that the robot demonstrates significant oscillations around the setpoint, and approaches the setpoint somewhat faster.
 
-Furthermore, we note that although the integral error was carefully clamped to a maximum value to prevent integral windup issues, the integral term was enough to build up momentum such that the robot would severely overshoot the setpoint. This resulted in the robot crashing into the wall rather than settling at the setpoint.
+Furthermore, we note that although the integral error was carefully clamped to a maximum value to prevent integral windup issues, the integral term was enough to build up momentum such that the robot would severely overshoot the setpoint to the point of crashing into the wall. 
 
-To address this, a derivative term was then added, which could hopefully penalize fast transitions in the error by setting negative gain values. Though this would potentially add instability when left alone, the hope is that this would be cancelled out anyway by the integral term.
+To address this, a derivative term was then added, which could hopefully reduce the motor speeds the faster the error decreases.
 
 ## PID Controller:
 
-To tune the fully fledged PID controller, the integral gain was scaled back by half to 0.025, and the derivative gain was set to around 0.1:o
+To tune the fully fledged PID controller, the integral gain was scaled back by half to 0.01, and the derivative gain was set to around 0.3:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GQAxQiuP1vI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ![PID Control](/lab-6-assets/pidcontrol.png)
 
-This procedure was then iterated for each of the steps (setting proportional gain, integral gain, and derivative gain) until a more optimal controller was achieved.
+We then see that the robot is now somewhat closer to the setpoint within about 20 mm, but seems to overshoot the final value by about 130 mm. We also observe that the robot moves slower backwards to the setpoint at the peak of the overshoot, suggesting that the controller can still be improved.
 
- The resulting gains were then tweaked slightly to achieve better rise times and lower overshoot percentages. 
+## Optimizations:
 
-The final result is shown below:
+To improve the controller, the heuristic was repeated a couple more times to find more optimal gain values and to maybe find a general pattern in how the gain values affect the dynamics.
 
-![PID Control Final](/lab-6-assets/pidcontrolfinal.png)
+ First Iteration                            | Second Iteration                   | Third Iteration                           | Fourth Iteration                                 |
+|:-----------------------------------------:|:----------------------------------:|:-----------------------------------------:|:------------------------------------------------:|
+![PID Control](/lab-6-assets/pidcontrol.png)|![PID PID](/lab-6-assets/pidpid.png)|![PID PID PID](/lab-6-assets/pidpidpid.png)|![PID PID PID PID](/lab-6-assets/pidpidpidpid.png)|
+
+
+As shown above, after the second iteration, the overshoot was somewhat reduced by about 50 mm, which is somewhat due to the lower proportional and integral gains and higher derivative gain. However, we also see that the final error is somewhat larger.
+
+Because both the overshoot and final error are both somewhat significant, a third iteration was executed, where the robot then reaches the setpoint with virtually no overshoot whatsoever. Despite this, the final error from the setpoint was about 100 mm, which was far too large.
+
+Because the controller already achieved a desirable overshoot, the proportional and integral gains were then kicked back to ensure that the robot approaches the setpoint slower and more accurately, and the derivative gain was increased to slow down near the setpoint. 
+
+We then find after the fourth iteration, the robot approaches the setpoint accurately with minimal overshoot. While this is already quite desirable as a controller, the slow rise time of about a full second is still somewhat suboptimal.
+
+The final PID controller was then tuned to higher proportional and integral gains to speed up to the setpoint, and then the derivative gain was adjusted the minimum value needed to minimize the overshot value:
+
+
+
+![Optimized](/lab-6-assets/optimized.png)
+
+Admittedly, the final error from the setpoint is still around 50 mm, suggesting a tradeoff between accuracy and speed of the controller.
+
+The parameters for each iteration, including the final optimized controller, are shown below:
+
+| Iteration | KP     | KI     | KD   | Overshoot (mm) | Final Error (mm) |
+| --------- | ------ | ------ | ---- | -------------- | ---------------- |
+| 1         | 0.1000 | 0.0100 | 0.30 | 130            | 20               |
+| 2         | 0.0900 | 0.0075 | 0.35 | 82             | 68               |
+| 3         | 0.1125 | 0.0050 | 0.50 | 0              | 103              |
+| 4         | 0.1000 | 0.0025 | 1.00 | 8              | 0                |
+| 4         | 0.1525 | 0.0045 | 0.26 | 1              | 45               |
+
+Finally, we note that the above tests only demonstrate the performance of the controller at initial position of within a meter from the wall on a carpeted floor. 
+
+We first verify that the robot's performance was robust over longer distances from the wall:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/i0BeqN5DeG4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+![Long](/lab-6-assets/long.png)
+
+Next, we demonstrate the performance on a smoother surface, where friction is somewhat reduced:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/2niU6rWtvDo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+![Floor](/lab-6-assets/floor.png)
+
+From here we observe that the performance is somewhat worse, where the overshoot and final error from the setpoint are both worse, which intuitively makes sense. To address this issue, the proportional and integral gains could be reduced, whereas the derivative gain could be increased, which would trade speed for accuracy.
 
 ## Speed:
 
