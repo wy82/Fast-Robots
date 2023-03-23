@@ -9,6 +9,8 @@ main:
     url: /lab-4/
   - title: "Lab 5"
     url: /lab-5/
+  - title: "Lab 6"
+    url: /lab-6/
 lab-1:
   - title: "Lab 1"
     children:
@@ -83,3 +85,16 @@ lab-5:
       - title: "Calibration"
         url: /lab-5/#calibration
       - title: "Open Loop Control"
+lab-6:
+ - title: "Lab 6"
+   children:
+     - title: "Setup"
+       url: /lab-6/#setup
+     - title: "P Controller"
+       url: /lab-6/#p-controller
+     - title: "PI Controller"
+       url: /lab-6/#pi-controller
+     - title: "PID Controller"
+       url: /lab-6/#pid-controller
+     - title: "Speed"
+       url: /lab-6/#speed
