@@ -57,7 +57,7 @@ analogWrite(4,0);
 analogWrite(A5,200);
 delay(1000);
 
-//stop
+// stop
 analogWrite(4,255);
 analogWrite(A5,255);
 delay(1000);
@@ -66,7 +66,7 @@ delay(1000);
 This generated the following response:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/3VEBldo_y08" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-\
+
 This process was then repeated for the second motor driver, and once both motor drivers were confirmed to work when connected to their respective motors, the 850 mAh battery was soldered to the drivers. After writing a somewhat similar set of PWM commands compared to before (alternating forward, braking, and backward commands) functionality of the entire control circuit was then tested:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/_4UBoPb1LRU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
