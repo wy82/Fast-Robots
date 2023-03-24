@@ -96,5 +96,9 @@ lab-6:
        url: /lab-6/#pi-controller
      - title: "PID Controller"
        url: /lab-6/#pid-controller
+     - title: "Optimizations"
+       url: /lab-6/#optimizations
+     - title: "Robustness"
+       url: /lab-6/#robustness
      - title: "Speed"
        url: /lab-6/#speed
