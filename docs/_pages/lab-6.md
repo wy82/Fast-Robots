@@ -274,11 +274,18 @@ Because both the overshoot and final error are both somewhat significant, a thir
 
 Because the controller already achieved a desirable overshoot, the proportional and integral gains were then kicked back to ensure that the robot approaches the setpoint slower and more accurately, and the derivative gain was increased to slow down near the setpoint. 
 
+Although increasing the derivative gain did help reduce the overshoot, the noise in the derivative of error caused the robot to oscillate and twitch, even after reaching the setpoint. 
+
+Fourth Iteration
+<iframe width="560" height="315" src="https://www.youtube.com/embed/sBuXXbXm2mE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+To address this, a complementary filter with $$\alpha = 0.25$$ was implemented to weigh the previous differences of error more heavily.
+
 We then find after the fourth iteration, the robot approaches the setpoint accurately with minimal overshoot. While this is already quite desirable as a controller, the slow rise time of about a full second is still somewhat suboptimal.
 
 The final PID controller was then tuned to higher proportional and integral gains to speed up to the setpoint, and then the derivative gain was adjusted the minimum value needed to minimize the overshot value:
 
-
+<iframe width="560" height="315" src="https://www.youtube.com/embed/sBuXXbXm2mE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ![Optimized](/lab-6-assets/optimized.png)
 
@@ -293,6 +300,8 @@ The parameters for each iteration, including the final optimized controller, are
 | 3         | 0.1125 | 0.0050 | 0.50 | 0              | 103              |
 | 4         | 0.1000 | 0.0025 | 1.00 | 8              | 0                |
 | 4         | 0.1525 | 0.0045 | 0.26 | 1              | 45               |
+
+# Robustness:
 
 Finally, we note that the above tests only demonstrate the performance of the controller at initial position of within a meter from the wall on a carpeted floor. 
 
