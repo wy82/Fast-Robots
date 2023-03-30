@@ -243,6 +243,12 @@ for i in range(1,len(tof)):
     outputs[:,i] = x.flatten()
 ```
 
+Note that as with the implementation of the PID controller, there is the option of using the time stamps to precisely calculate the time steps $h$. 
+
+To keep things simple however, these time steps are interpreted as constant, although this will admittedly add error since the time steps have a standard deviation of a few milliseconds. 
+
+Fortunately, the performance of the filter and controller both appear surprisingly robust against variations in these time steps, so there isn't a huge loss in accuracy.
+
 To accomplish this, we call on a provided helper function kf(), which computes the updates of the mean and covariance of the current belief after one iteration of the filter:
 
 ```python
@@ -264,9 +270,13 @@ This was then tested on data from a previous iteration of the PID controller wit
 
 ![KF Overshoot](/lab-7-assets/kf.png)
 
+Note that we plot the mean of the filter and ignore the resulting covariance in this plot. We also only plot the inverted position estimate, which should equal the distance from the wall by virtue of how the origin was defined.
+
 We then test this once more on the optimized PID controller developed in Lab 6 with minimal overshoot:
 
 ![KF Optimal](/lab-7-assets/kf_optimal.png)
+
+After both iterations, we find that the filter is nearly indistinguishable from the actual measurements, suggesting that the noise covariance values are already close to optimal.
 
 ## Implementation
 
