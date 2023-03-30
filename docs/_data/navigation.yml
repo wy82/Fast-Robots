@@ -11,6 +11,8 @@ main:
     url: /lab-5/
   - title: "Lab 6"
     url: /lab-6/
+  - title: "Lab 7"
+    url: /lab-7/
 lab-1:
   - title: "Lab 1"
     children:
@@ -102,3 +104,16 @@ lab-6:
        url: /lab-6/#robustness
      - title: "Speed"
        url: /lab-6/#speed
+lab-7:
+ - title: "Lab 7"
+   children:
+     - title: "System ID"
+       url: /lab-7/#system-id
+     - title: "Setup"
+       url: /lab-7/#setup
+     - title: "Testing"
+       url: /lab-7/#testing
+     - title: "Implementation"
+       url: /lab-7/#implmentation
+     - title: "Speedup"
+       url: /lab-7/#speedup
