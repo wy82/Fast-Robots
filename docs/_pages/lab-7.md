@@ -53,7 +53,6 @@ This was basically accomplished by setting the PWM values of the robot to the ma
 
 The ToF sensor data was then collected as the robot approached a wall, and the resulting sensor outputs, motor inputs were plotted. 
 
- ToF Data                                  | PWM Data                                  |
 |:----------------------------------------:|:-----------------------------------------:|
 ![Carpet ToF](/lab-7-assets/carpet_tof.png)|![Carpet PWM](/lab-7-assets/carpet_pwm.png)|
 
@@ -65,7 +64,6 @@ To fix this, a second moving average filter with a window size of 10 samples was
 
 This approach admittedly was a bit hacky and is most likely an underestimate of the actual steady state speeds, as the robot did not have enough time to appreciably plateau in speed. Furthermore, the introduction of moving average filters may have also smoothed out fast transitions in the depth data that may have been due to the actual movement of the robot, rather than noise in the sensor.
 
- Calculated Speed                              | Averaged Speed                                            |
 :---------------------------------------------:|:---------------------------------------------------------:|
 ![Carpet Speed](/lab-7-assets/carpet_speed.png)|![Carpet Average Speed](/lab-7-assets/carpet_avg_speed.png)|
 
@@ -101,13 +99,11 @@ Since the drag coefficient could depend quite heavily on the kind of surface the
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/K4nFhaZZuK4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
- ToF Data                                | PWM Data                                | 
 |:--------------------------------------:|:---------------------------------------:|
 ![Floor ToF](/lab-7-assets/floor_tof.png)|![Floor PWM](/lab-7-assets/floor_pwm.png)|
 
 We then calculate the steady-state speed using the same approach as before, which comes out to around 2049 mm/s:
 
- Calculated Speed                            | Averaged Speed                                          |
 :-------------------------------------------:|:-------------------------------------------------------:|
 ![Floor Speed](/lab-7-assets/floor_speed.png)|![Floor Average Speed](/lab-7-assets/floor_avg_speed.png)|
 
@@ -159,7 +155,7 @@ B_d &= Bh \\
 B_d &= 
 \begin{bmatrix}
 0 \\
-4376h
+3682h
 \end{bmatrix}
 \end{align}$$
 
@@ -268,17 +264,32 @@ def kf(mu,sigma,u,y):
 
 This was then tested on data from a previous iteration of the PID controller with overshoot:
 
-![KF Overshoot](/lab-7-assets/kf.png)
+|:--------------------------------------------:|:---------------------------------------------------------:|
+![KF Overshoot](/lab-7-assets/kf_overshoot.png)|![KF Overshoot Error](/lab-7-assets/kf_overshoot_error.png)|
+
+After both iterations, we find that the filter is nearly indistinguishable from the actual measurements, suggesting that the noise covariance values are already close to optimal, with the exception of the final predicted values, which seem to be offset by a constant error. Because the residuals are clearly biased, it seems that the system parameters were incorrectly estimated.
+
+A solution to this was to adjust the drag coefficient to $d = 0.4403$, which was admittedly somewhat hacky, but this seemed to correct the bias. We also adjust the sensor covariance to $\Sigma_z = 1$, which significantly reduced the overall magnitude of the residuals everywhere:
+
+|:----------------------------------------------------------:|:-----------------------------------------------------------------------:|
+![KF Overshoot Optimized](/lab-7-assets/kf_overshoot_opt.png)|![KF Overshoot Optimized Error](/lab-7-assets/kf_overshoot_opt_error.png)|
 
 Note that we plot the mean of the filter and ignore the resulting covariance in this plot. We also only plot the inverted position estimate, which should equal the distance from the wall by virtue of how the origin was defined.
 
-We then test this once more on the optimized PID controller developed in Lab 6 with minimal overshoot:
+One danger to adjusted the system parameter $d$ is a potential overfitting of the filter and system to a particular dataset. To verify that this effect is not too egregious, we test the filter once more on the optimized PID controller data developed in Lab 6:
 
-![KF Optimal](/lab-7-assets/kf_optimal.png)
+|:----------------------------------------:|:---------------------------------------------------------:|
+![KF Optimal](/lab-7-assets/kf_optimal.png)|![KF Optimal Residuals](/lab-7-assets/kf_optimal_error.png)|
 
-After both iterations, we find that the filter is nearly indistinguishable from the actual measurements, suggesting that the noise covariance values are already close to optimal.
+Note that despite the attempts to minimize the residuals, there are occassionally large spikes in error that do not seem to be explained by random noise alone, suggesting that the system parameters might still need some adjusting.
 
 ## Implementation
+
+Once the Kalman filter was verified to work in Python, the next step was to implement the filter on the robot:
+
+```cpp
+
+``` 
 
 ## Speedup
 
