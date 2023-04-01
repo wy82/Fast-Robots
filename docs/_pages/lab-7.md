@@ -288,8 +288,44 @@ Note that despite the attempts to minimize the residuals, there are occassionall
 Once the Kalman filter was verified to work in Python, the next step was to implement the filter on the robot:
 
 ```cpp
+Matrix<2,2> I = {1, 0,
+                 0, 1};
+Matrix<2,2> H = {h, 0,
+                 0, h};               
+Matrix<2,2> A = {0, 1,
+                 0, -d/m};
+Matrix<2,2> A_d = I + H*A;
+Matrix<2,1> B = {0,
+                 1/m};
+Matrix<2,1> B_d = H*B;
+Matrix<1,2> C = {-1, 0};
 
+Matrix<2,2> Sigma_u = {200000, 0,
+                      0, 200000};
+Matrix<1,1> Sigma_z = {1};
+
+Matrix<2,1> mu;
+Matrix<2,2> Sigma = I;
+
+void kf_step(float u, float z){
+  // Prediction Step
+  Matrix<1,1> u_matrix = {u};
+  Matrix<2,1> mu_p = A_d * mu + B_d * u_matrix;
+  Matrix<2,2> Sigma_p = A_d * Sigma * ~A_d + Sigma_u;
+  // Update Step
+  Matrix<1,1> Sigma_m = C * Sigma_p * ~C + Sigma_z;
+  Invert(Sigma_m);
+  Matrix<2,1> K_kf = Sigma_p * ~C * Sigma_m;
+  Matrix<1,1> z_matrix = {z};
+  Matrix<1,1> z_m = z_matrix - C*mu_p;
+  mu = mu_p + K_kf*z_m;
+  Sigma = (I - K_kf*C) * Sigma_p;
+}          
 ``` 
+
+This then produced the following result:
+
+
 
 ## Speedup
 
