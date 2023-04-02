@@ -170,7 +170,9 @@ C &=
 
 To ensure that the relationship is purely linear, we define the origin of the position as the wall, which would make the position equal to the negative distance measurements to the wall (since the positive direction is taken as towards the wall).
 
-Finally, the sensor noise and system disturbance covariance matrices need to be specified, which need to be tuned to enable the filter to perform accurately. A reasonable estimate would be to assume a sampling period of 20 milliseconds, and a standard deviation of position and velocity of 10 mm and 10 mm/s, respectively, which was taken from lecture.
+Finally, the sensor noise and system disturbance covariance matrices need to be specified, which need to be tuned to enable the filter to perform accurately. 
+
+A reasonable estimate would be to assume a standard deviation of 27.7 millimeters, which was taken from lecture. Intuitively, this makes sense since the dynamics are generally expected to be less reliable compared to the measurements.
 
 This yields the following process noise covariance matrix:
 
@@ -214,8 +216,8 @@ n = 2
 h = 0.02
 d = 0.0004403
 m = 0.0002716
-sigma_1 = np.sqrt(10**2/0.020)
-sigma_2 = np.sqrt(10**2/0.020)
+sigma_1 = 27.7
+sigma_2 = 20
 sigma_3 = 20
 
 # State
@@ -300,8 +302,8 @@ Matrix<2,1> B = {0,
 Matrix<2,1> B_d = H*B;
 Matrix<1,2> C = {-1, 0};
 
-Matrix<2,2> Sigma_u = {200000, 0,
-                      0, 200000};
+Matrix<2,2> Sigma_u = {767.29, 0,
+                      0, 767.29};
 Matrix<1,1> Sigma_z = {1};
 
 Matrix<2,1> mu;
@@ -320,12 +322,25 @@ void kf_step(float u, float z){
   Matrix<1,1> z_m = z_matrix - C*mu_p;
   mu = mu_p + K_kf*z_m;
   Sigma = (I - K_kf*C) * Sigma_p;
-}          
+}                    
 ``` 
+
+To use the filter, the distance measurements were simply replaced with the filter estimates, but the key was to flip the sign since the filtered state is the negative of the measurements:
+
+cpp```
+kf_step(pwml/126.0,distance2);
+float error = -mu(0,0)-setpoint;
+```
 
 This then produced the following result:
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/BADdg2uX9no" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
+|:----------------------------------:|:-----------------------------------------------:|
+![Real KF](/lab-7-assets/real_kf.png)|![Real KF Error](/lab-7-assets/real_kf_error.png)|
 
 ## Speedup
 
+Next, to use the filter to speed up the execution speed of the control loop, the key was to use the predictions of state from the filter . 
+
+The idea is to essentially extrapolate to future states via the system dynamics, but in a way that incorporates the noise level and future measurements.
