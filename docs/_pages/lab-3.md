@@ -76,14 +76,14 @@ Next, to produce an estimate about the lower endpoint of the ToF sensor's range,
 
 Finally, to measure the ranging time of the sensor, I tested the latency between executing the startRanging() function and receiving the sensor data. 
 
-Since there might be cases where the sensor collects data multiple times before calling stopRanging(), a table of the latencies averaged over 30 meas This came out to around rements is shown below. Note that some measurements include the latency of calls to clearInterrupt() and StopRanging() others did not.
+Since there might be cases where the sensor collects data multiple times before calling stopRanging(), a comparison between the averaged latencies including calls of clearInterrupt() and stopRanging() over 30 measurements is shown in the table below: 
 
 | Including clearInterrupt() and stopRanging() | Ranging Time (ms)  | 
 | -------------------------------------------- | ------------------ |
 | Yes                                          | 51.55              |
 | No                                           | 50.60              |
 
-From here we see that the added latency required to stop the measurements is minimal at best and is generally around 50 milliseconds.
+From here we see that the added latency required to stop the measurements is minimal at best and is generally around 50 milliseconds. Admittedly, this also includes the latency to print to the Serial monitor, and therefore might not be very accurate. A better way might be to rapidly store values into arrays and then to send these over Bluetooth.
 
 ## Using Two ToF Sensors:
 

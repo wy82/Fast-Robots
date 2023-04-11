@@ -13,6 +13,8 @@ main:
     url: /lab-6/
   - title: "Lab 7"
     url: /lab-7/
+  - title: "Lab 8"
+    url: /lab-8/
 lab-1:
   - title: "Lab 1"
     children:
@@ -87,6 +89,7 @@ lab-5:
       - title: "Calibration"
         url: /lab-5/#calibration
       - title: "Open Loop Control"
+        url: /lab-5/#open-loop-control
 lab-6:
  - title: "Lab 6"
    children:
@@ -117,3 +120,11 @@ lab-7:
        url: /lab-7/#implmentation
      - title: "Speedup"
        url: /lab-7/#speedup
+lab-8:
+ - title: "Lab 8"
+   children:
+     - title: "Stunt"
+       url: /lab-8/#stunt
+     - title: "Speed"
+       url: /lab-8/#speed
+     

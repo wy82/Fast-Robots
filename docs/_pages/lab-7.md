@@ -45,7 +45,7 @@ u
 \end{bmatrix}
 \end{align}$$
 
-Here, the drag $d$ and mass $m$ of the robot are not initially known, and must be measured via taking the step response of the system, which was done by sending a stream of constant PWM values to the motors.
+Here, the drag $d$ and mass $m$ of the robot are not initially known, and must be measured via taking the step response of the system. This was done by sending a stream of constant PWM values to the motors.
 
 This was basically accomplished by setting the PWM values of the robot to the maximum values achieved using the position PID controller developed in Lab 6, which were around 126 after shifting and rescaling to account for the motor's PWM deadband:
 
@@ -327,7 +327,7 @@ void kf_step(float u, float z){
 
 To use the filter, the distance measurements were simply replaced with the filter estimates, but the key was to flip the sign since the filtered state is the negative of the measurements:
 
-cpp```
+```cpp
 kf_step(pwml/126.0,distance2);
 float error = -mu(0,0)-setpoint;
 ```
@@ -341,6 +341,55 @@ This then produced the following result:
 
 ## Speedup
 
-Next, to use the filter to speed up the execution speed of the control loop, the key was to use the predictions of state from the filter . 
+Next, to use the filter to speed up the execution speed of the control loop, the key was to use the predictions of state from the filter after the prediction step alone whenever the measurements are not ready. 
 
 The idea is to essentially extrapolate to future states via the system dynamics, but in a way that incorporates the noise level and future measurements.
+
+To do so, the filter was split into two functions:
+
+```cpp
+void kf_pred_step(float u){
+  Matrix<1,1> u_matrix = {u};
+  mu = A_d * mu + B_d * u_matrix;
+  Sigma = A_d * Sigma * ~A_d + Sigma_u;
+}   
+
+void kf_update_step(float z){
+  Matrix<1,1> Sigma_m = C * Sigma * ~C + Sigma_z;
+  Invert(Sigma_m);
+  Matrix<2,1> K_kf = Sigma * ~C * Sigma_m;
+  Matrix<1,1> z_matrix = {z};
+  Matrix<1,1> z_m = z_matrix - C*mu;
+  mu = mu + K_kf*z_m;
+  Sigma = (I - K_kf*C) * Sigma;
+}
+```
+
+Furthermore, because the main bottleneck to the control loop's speed is the latency due to checking for whether the sensor data is ready, these function calls are instead omitted. 
+
+However, doing so runs the risk of the sensor measurement not being ready in time, so the loop was intentionally programmed to only take a measurement periodically after a set number of iterations. 
+
+In doing so, additional errors would be added from extrapolating the dynamics, so the goal was to perform the minimum amount of extrapolation needed to achieve a substantial speedup.
+
+Considering that the loop takes around 16 ms on average in order for the measurements to be ready, and considering that the iterations take only around 4 ms on average without waiting for the measurements, a somewhat safe compromise was to skip every eighth measurement. 
+
+This would ultimately leave about 32 ms between each measurement on average, which was roughly the timing budget for the depth sensors.
+
+To test the filter's capability to extrapolate, a simple sanity check in Python was performed, which simulated the extrapolation by skipping every eighth measurement.
+
+After experimenting a bit with the filter, it was found that the system dynamics were better fit using the parameters $d = 0.0007$ and $h = 0.0002$, which seem to be closer to the original estimated parameter values:
+
+|:----------------------------------------------:|:-----------------------------------------------------------:|
+![Extrapolation](/lab-7-assets/extrapolation.png)|![Extrapolation Error](/lab-7-assets/extrapolation_error.png)|
+
+This ultimately worked fairly well, and resulted in filter estimates that closely matched the distance data, albeit with substantially more error than before:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/EE_lQzC1w0I" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+![Speed](/lab-7-assets/speed.png)
+
+Note that because the datapoints are now being extrapolated with the Kalman filter, it is somewhat difficult to characterize the error without the actual distance measurement for reference. 
+
+One way to measure this might be to still collect these reference distance measurements when only the prediction step is being used. 
+
+However, collecting these measurements adds a significant amount of latency to the loop, which might not be representative of the performance of the filter when the measurement time budget and accuracy of the sensors is severely constrained.
