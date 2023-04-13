@@ -210,7 +210,7 @@ float getGPitch(ICM_20948_I2C *sensor){
   current = millis();
   float dt = (float) (current - prevPitchTime)/1000.0;
   prevPitchTime = current;
-  gPitch = gPitch - dt*sensor->gyrX();
+  gPitch = gPitch - dt*sensor->gyrY();
   return gPitch;
 }
 
@@ -220,7 +220,7 @@ float getGRoll(ICM_20948_I2C *sensor){
   current = millis();
   float dt = (float) (millis() - prevRollTime)/1000.0;
   prevRollTime = current;
-  gRoll = gRoll - dt*sensor->gyrY();
+  gRoll = gRoll - dt*sensor->gyrX();
   return gRoll;
 }
 
