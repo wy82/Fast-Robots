@@ -210,7 +210,7 @@ Furthermore, to ensure that the PWM values would be rescaled outside of the moto
 ```cpp
 int rescalepwm(float pwm){
   float deadband = 40;
-  return round((pwm+deadband)*215.0/255.0);
+  return round(pwm*(255.0-deadband)/255.0+deadband);
 }
 
 float calibratepwm(float pwm, float alpha){
