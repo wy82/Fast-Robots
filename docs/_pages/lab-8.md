@@ -5,7 +5,9 @@ sidebar:
   nav: "lab-8"
 ---
 
-The goal of this lab was to essentially put together the PID controller and Kalman filter to execute high speed stunts with the robot. In this instance, the focus was on driving quickly towards a wall about 3 m away, performing a flip, and then driving back as fast as possible back to the starting line.
+The goal of this lab was to essentially put together the PID controller and Kalman filter to execute high speed stunts with the robot. 
+
+In this instance, the objective was to drive quickly towards a wall about 3 m away, perform a flip, and then drive back as fast as possible back to the starting line.
 
 ## Kalman Filter Speedup
 
@@ -207,7 +209,7 @@ I'm pretty sure this last one doesn't really count as a successful run", but I g
 
 As a fair disclaimer, the methods used to execute this stunt are incredibly far from being robust (the true success rate is probably no greater than 1 out of every 5 attempts). While the flip happens rather consistently, the real issue was in the inability of the robot to regulate its orientation.
 
-As shown in the video, the speed of the robot tends to make it bounce after the flip, which tends to make the robot veer off to the side. Another issue that wasn't fully resolved was the tendency of the robot to flip and land in an angled oritentation facing the left or right.
+As shown in the video, the speed of the robot tends to make it bounce after the flip, which tends to make the robot veer off to the side. Another issue that wasn't fully resolved was how the flip could land at an angle, which caused the robot to completely miss the finish line on the way back.
 
 Since slippage of the wheels, bouncing, and disturbances to the robot are all generally things that occur at high speeds, the only real solution under this "semi-open-loop" control approach would be to lower the speed. To truly produce a robust solution however, some degree of orientation control would have to be implemented, so that the robot could either flip, reorient, and then return, or to possibly dynamically steer while moving back for an even faster solution.
 
