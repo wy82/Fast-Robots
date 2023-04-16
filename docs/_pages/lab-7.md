@@ -47,7 +47,9 @@ u
 
 Here, the drag $d$ and mass $m$ of the robot are not initially known, and must be measured via taking the step response of the system. This was done by sending a stream of constant PWM values to the motors.
 
-This was basically accomplished by setting the PWM values of the robot to the maximum values achieved using the position PID controller developed in Lab 6, which were around 126 after shifting and rescaling to account for the motor's PWM deadband:
+This was basically accomplished by setting the PWM values of the robot to the maximum values achieved using the position PID controller developed in Lab 6, which were around 100 before shifting and rescaling to account for the motor's PWM deadband. 
+
+These values were taken before the deadband (output of the PID controller) so that the input behave linearly (the shifting out of the deadband is affine). Admittedly, this probably doesn't make a huge difference anyway.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/9p3nJZ-9WFw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
@@ -328,7 +330,7 @@ void kf_step(float u, float z){
 To use the filter, the distance measurements were simply replaced with the filter estimates, but the key was to flip the sign since the filtered state is the negative of the measurements:
 
 ```cpp
-kf_step(pwml/126.0,distance2);
+kf_step(pwml/100.0,distance2);
 float error = -mu(0,0)-setpoint;
 ```
 

@@ -123,6 +123,10 @@ lab-7:
 lab-8:
  - title: "Lab 8"
    children:
+     - title: "Kalman Filter Speedup"
+       url: /lab-8/#kalman-filter-speedup
+     - title: "Velocity PID Control"
+       url: /lab-8/#velocity-pid-control
      - title: "Stunt"
        url: /lab-8/#stunt
      - title: "Speed"
