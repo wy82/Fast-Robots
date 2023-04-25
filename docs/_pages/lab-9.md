@@ -12,17 +12,7 @@ Before reading out distance measurements, the robot needed a reliable way of rot
 
 Although this could be implemented using orientation control on yaw, the concern was that the drift from integrating gyroscope measurements would make these measurements very inaccurate over a long enough period of time. This would especially become more of a problem if the robot moves very slow to acquire a higher resolution of the map.
 
-For this reason, a PID controller on the angular velocity of the robot was instead implemented, which hopefully would circumvent integrating the gyroscope readings. 
-
-While implementing the controller, it was observed that rotating along hte robot's center axis was especially difficult at slow angular velocities, as one of the motors would potentially stall while the other would turn without any predictable pattern. 
-
-Since these asymmetries in motor performance would easily throw the rotation off the center axis, the right motor was held still so that the robot would turn around an axis centered between the left wheels.
-
-Furthermore, because the vibrations of the motors could add significant amounts of noise to the gyroscope while moving, a complementary low pass filter was applied to the readings.
-
-Although this would make the sensor readings slower to sharp transitions in angular velocity, this is not really a concern since the goal is to move as slowly as possible.
-
-The above ideas were then implemented as the following function:
+For this reason, a PID controller on the angular velocity of the robot was instead implemented, which hopefully would circumvent integrating the gyroscope readings:
 
 ```cpp
 float yaw_vel_setpoint = 0;
@@ -53,10 +43,21 @@ void yaw_vel_control(){
 }
 ```
 
+While implementing the controller, it was observed that rotating along the robot's center axis was especially difficult at slow angular velocities, as one of the motors would potentially stall while the other would turn without any predictable pattern. Since these asymmetries in motor performance would easily throw the rotation off the center axis, the right motor was held still so that the robot would turn around an axis centered between the left wheels.
+
+Furthermore, because the vibrations of the motors could add significant amounts of noise to the gyroscope while moving, a complementary low pass filter was applied to the readings. Granted, this would make the sensor readings slower to sharp transitions in angular velocity, but this is not really a concern since the goal is to move as slowly as possible.
 
 After tuning the controller, it was found that the slowest velocity that could be achieved was about 50 degrees per second, where the corresponding PID parameters were $K_P = 3.0$, $K_I = 0.001$, and $K_D = 0.0$. 
 
 Assuming a sampling period of roughly 20 milliseconds (the measurement time budget in the "long" mode) for each distance sensor, this would correspond to 50 sensor readings per second and 360 sensor readings per rotation. If both ToF sensors are used, then this rate would essentially be doubled, although this would require finding the transformation matrices for both sensors precisely.
+
+Although this might imply a very high mapping resolution, we note that the robot is constantly moving during each sensor measurement and hence the accuracy of each distance measurement would be somewhat lower. In a 4 meter-by-4 meter empty square room, the distance measurements roughly behave with the secant of the angle. This implies that we might find the greatest rate of change in distance around the corners, so in the worst case we would expect a distance change of about 
+
+$$\begin{align}
+4(\sec\left(45 deg - \frac{50 deg/s}{50 samples/s}\right)) &= 0.09620 m
+\end{align$$$
+
+If we assume that this distance change is simply added to the ToF distance reading, we would expect roughly a 100 mm worst case error. While this might seem like a lot, the relative error of the measurement is still below about 5%, and the accuracy is substantially improved when near the middle of the walls and not the corners. In reality however, we observe worse accuracy at longer distances, so this might have to be offset with some correcting factor in the actual data.
 
 Below we demonstrate the performance of the controller:
 
@@ -72,8 +73,10 @@ Finally, the gyroscope readings also demonstrate periodic dips in angular veloci
 
 While increasing the integral term would in theory provide an extra kick in motor power to reduce the magnitude of the dips, this would also increase the overshoot on the way out of the dip, which would require a delicate balance with the dampening of the derivative term. 
 
-Unfortunately, I was ultimately unable to eliminate these dips from the output even after a substantial amount of tuning.
+Unfortunately, these dips from the output never faded even after a substantial amount of tuning.
 
 ## Distance Scan
+
+
 
 ## Mapping
