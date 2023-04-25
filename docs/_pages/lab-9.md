@@ -55,7 +55,7 @@ Although this might imply a very high mapping resolution, we note that the robot
 
 $$\begin{align}
 4(\sec\left(45 deg - \frac{50 deg/s}{50 samples/s}\right)) &= 0.09620 m
-\end{align$$$
+\end{align$$
 
 If we assume that this distance change is simply added to the ToF distance reading, we would expect roughly a 100 mm worst case error. While this might seem like a lot, the relative error of the measurement is still below about 5%, and the accuracy is substantially improved when near the middle of the walls and not the corners. In reality however, we observe worse accuracy at longer distances, so this might have to be offset with some correcting factor in the actual data.
 
@@ -63,7 +63,8 @@ Below we demonstrate the performance of the controller:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/MxB0IlATCDk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-![Rotation](/lab-9-assets/Rotation.png)
+|:------------------------------------:|:---------------------------:|
+![Rotation](/lab-9-assets/Rotation.png)|![PWM](/lab-9-assets/PWM.png)|
 
 Note that to reduce the friction associated from the wheels skidding, a generous amount of duct tape was applied to the wheels, which can be seen from the video above. 
 
@@ -77,6 +78,22 @@ Unfortunately, these dips from the output never faded even after a substantial a
 
 ## Distance Scan
 
+Once the controller for rotating the robot was sufficiently tuned, the robot was then placed inside a walled environment inside the lab space at the 4 coordinate points $(0,3)$, $(5,3)$, $(5,-3)$, and $(-3,-2)$, where the $x$ and $y$ axes are in meters. At each marked location, the robot was then oriented facing in the positive $y$-direction and set to rotate for at least two full turns to gauge the precision of the distance scans.
 
+To sanity check the distance scans, plots of the distance data in polar coordinates were made where the robot was assumed to be turning in place to simplify processing the data: 
+
+|:-------------------------:|:--------------------------:|:----------------------------:|:------------------------------:|
+![03](/lab-9-assets/032.png)|![53](/lab-9-assets/532.png)|![5-3](/lab-9-assets/5n32.png)|![-3-2](/lab-9-assets/n3n22.png)|
+
+|:--------------------------:|:---------------------------:|:-----------------------------:|:-------------------------------:|
+![03](/lab-9-assets/03p2.png)|![53](/lab-9-assets/53p2.png)|![5-3](/lab-9-assets/5n3p2.png)|![-3-2](/lab-9-assets/n3n2p2.png)|
+
+Also note that the angles are calculated assuming a constant angular velocity at the setpoint of 50 degrees per second and constant sampling times. Since neither of these assumptions are completely true, the plots are not expected to be very representative of the actual map.
 
 ## Mapping
+
+To form the map, the we first need to 
+
+However, because the axis of rotation is not the center of the robot, the distance data was first transformed to the equivalent distance from the axis of rotation. This was easily done by observing that the radius of the rotation is perpendicular to the line of sight of the distance sensor to the wall.
+
+
