@@ -82,18 +82,98 @@ Once the controller for rotating the robot was sufficiently tuned, the robot was
 
 To sanity check the distance scans, plots of the distance data in polar coordinates were made where the robot was assumed to be turning in place to simplify processing the data: 
 
-|:-------------------------:|:--------------------------:|:----------------------------:|:------------------------------:|
-![03](/lab-9-assets/032.png)|![53](/lab-9-assets/532.png)|![5-3](/lab-9-assets/5n32.png)|![-3-2](/lab-9-assets/n3n22.png)|
+|:-------------------------:|:--------------------------:|
+![03](/lab-9-assets/032.png)|![53](/lab-9-assets/532.png)|
+|:---------------------------:|:------------------------------:|
+![5-3](/lab-9-assets/5n32.png)|![-3-2](/lab-9-assets/n3n22.png)|
 
-|:--------------------------:|:---------------------------:|:-----------------------------:|:-------------------------------:|
-![03](/lab-9-assets/03p2.png)|![53](/lab-9-assets/53p2.png)|![5-3](/lab-9-assets/5n3p2.png)|![-3-2](/lab-9-assets/n3n2p2.png)|
+|:--------------------------:|:---------------------------:|
+![03](/lab-9-assets/03p2.png)|![53](/lab-9-assets/53p2.png)|
+|:----------------------------:|:-------------------------------:|
+![5-3](/lab-9-assets/5n3p2.png)|![-3-2](/lab-9-assets/n3n2p2.png)|
 
 Also note that the angles are calculated assuming a constant angular velocity at the setpoint of 50 degrees per second and constant sampling times. Since neither of these assumptions are completely true, the plots are not expected to be very representative of the actual map.
 
 ## Mapping
 
-To form the map, the we first need to 
+To form the map, we first need the translation matrix to convert the sensor measurements into the coordinate with respect to the center of the robot. Note that we assume that the $x$-axis of the robot is aligned with the front of the robot. 
 
-However, because the axis of rotation is not the center of the robot, the distance data was first transformed to the equivalent distance from the axis of rotation. This was easily done by observing that the radius of the rotation is perpendicular to the line of sight of the distance sensor to the wall.
+Since the ToF sensor is roughly 70 mm in front of the center and 10 mm to the right of the center, we know that the corresponding transformation in homogeneous coordinates is
 
+$$\begin{align}
+T_{S}^{B} &= 
+\begin{bmatrix}
+1 & 0 & 70 \\
+0 & 1 & 10 \\
+0 & 0 & 1
+\end{bmatrix}
+\end{align}$$
 
+Finally, we perform one more coordinate transformation to translate to the center of rotation, which is roughly 70 mm to the right of the robot's center:
+
+$$\begin{align}
+T_{B}^{C} &=
+\begin{bmatrix}
+0 & 0 & 0 \\
+0 & 0 & 70 \\
+0 & 0 & 1
+\end{bmatrix}
+\end{align}$$
+
+Next, we construct the rotation matrix to align the axes of the body fixed frame to the global frame, which is a function of the robot's angular pose $\theta$ relative to the global coordinate axes:
+
+$$\begin{align}
+R_{B}^{G}(\theta) &= 
+\begin{bmatrix}
+\cos(\theta) & -\sin(\theta) \\
+\sin(\theta) & \cos(\theta)
+\end{bmatrix}
+\end{align}$$
+
+We can then find the coordinates of the ToF measurement in the global reference frame via
+
+$$\begin{align}
+\tilde{P}^{C} &= T_{B}^{C}T_{S}^{B}\tilde{P}^{S} \\
+P^{G} &= R_{B}^{G}P^{C}
+\end{align}$$
+
+Here, we define $P^{S}$ to be the distance measurement, which is in the sensors reference frame:
+
+$$\begin{align}
+P^{S} &=
+\begin{bmatrix}
+d \\
+0
+\end{bmatrix} \\
+\tilde{P}^{S} &=
+\begin{bmatrix}
+P^{S} \\
+1
+\end{bmatrix} \\
+\tilde{P}^{C} &=
+\begin{bmatrix}
+P^{C} \\
+1
+\end{bmatrix} 
+\end{align}$$
+
+Note that $d$ is the reading from the ToF sensor, which is aligned with the sensor reference frame's $x$-axis.
+
+We then implement this in Python as the following:
+
+```python
+T_SB = np.array([[1, 0, 70],[0, 1, 10],[0, 0, 1]])
+T_BC = np.array([[1, 0, 0],[0, 1, 70],[0, 0, 1]])
+def R_BG(theta):
+    return np.array([[np.cos(theta), np.sin(theta)],[-np.sin(theta), np.cos(theta)]])
+def P_G(d,theta):
+    P_Sh = np.array([[d],[0],[1]])
+    P_Ch = T_BC.dot(T_SB.dot(P_Sh))
+    P_C = P_Ch[0:-1]
+    P_G = R_BG(theta).dot(P_C)
+    return P_G
+```
+
+After merging the scans together, we get the following map (units in feet):
+
+![Map](/lab-9-assets/map.png)
