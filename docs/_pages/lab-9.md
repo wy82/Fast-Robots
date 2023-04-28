@@ -94,7 +94,7 @@ To sanity check the distance scans, plots of the distance data in polar coordina
 
 Also note that the angles are calculated assuming a constant angular velocity at the setpoint of 50 degrees per second and constant sampling times. Since neither of these assumptions are completely true, the plots are not expected to be very representative of the actual map.
 
-## Mapping
+## Transformed Data 
 
 To form the map, we first need the translation matrix to convert the sensor measurements into the coordinate with respect to the center of the robot. Note that we assume that the $x$-axis of the robot is aligned with the front of the robot. 
 
@@ -177,3 +177,5 @@ def P_G(d,theta):
 After merging the scans together, we get the following map (units in feet):
 
 ![Map](/lab-9-assets/map.png)
+
+## Mapping

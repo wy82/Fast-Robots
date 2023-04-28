@@ -17,6 +17,8 @@ main:
     url: /lab-8/
   - title: "Lab 9"
     url: /lab-9/
+  - title: "Lab 10"
+    url: /lab-10/
 lab-1:
   - title: "Lab 1"
     children:
@@ -140,7 +142,13 @@ lab-9:
        url: /lab-9/#angular-velocity-control
      - title: "Distance Scan"
        url: /lab-9/#distance-scan
+     - title: "Transformed Data"
+       url: /lab-9/#transformed-data
      - title: "Mapping"
        url: /lab-9/#mapping
+lab-10:
+ - title: "Lab 10"
+   children:
+     
      
      
