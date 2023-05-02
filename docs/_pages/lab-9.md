@@ -174,8 +174,19 @@ def P_G(d,theta):
     return P_G
 ```
 
-After merging the scans together, we get the following map (units in feet):
+After merging the scans together, we get the following map, which is plotted in both feet and millimeters:
 
-![Map](/lab-9-assets/map.png)
+:-----------------------------------------:|:-------------------------------------:|
+![Map Imperial](/lab-9-assets/map_feet.png)|![Map Metric](/lab-9-assets/map_mm.png)|
+
+To get the merged map, I had to adjust the initial angle until the map segment seemed to rotate nicely into place. Although I made sure to orient the robot at the same angle at each of the marked locations, I didn't mark the timestamp at the moment the PID controller was engaged. To find the starting of the PID control, I simply adjusted the indexes of the received data until the data seemed periodic with two periods.
+
+However, the lack of synchronization doesn't fully explain the changing initial angle if two full periods were recorded. A second reason would then be the rise time of the angular velocity upon starting up the PID controller, which might result in the robot moving slowly or not at all for a brief period of time.
 
 ## Mapping
+
+To form the line-based map, I tried to make straight lines out of the plotted ToF distance data. In general, I trusted measurements that were closer to the robot's center of rotation. 
+
+
+:-------------------------------------:|:-------------------------------------:|
+![Map Line](/lab-9-assets/map_line.png)|![Map Line](/lab-9-assets/line.png)|
