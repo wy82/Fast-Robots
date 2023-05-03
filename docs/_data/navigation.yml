@@ -19,6 +19,8 @@ main:
     url: /lab-9/
   - title: "Lab 10"
     url: /lab-10/
+  - title: "Lab 11"
+    url: /lab-11/
 lab-1:
   - title: "Lab 1"
     children:
@@ -149,6 +151,14 @@ lab-9:
 lab-10:
  - title: "Lab 10"
    children:
-     
-     
-     
+   - title: "Prediction Step"
+     url: /lab-10/#prediction-step
+   - title: "Update Step"
+     url: /lab-10/#update-step
+lab-11:
+  - title: "Lab 11"
+    children:
+    - title: "Simulation"
+      url: /lab-11/#simulation
+    - title: "Observation Loop"
+      url: /lab-11/#observation-loop
