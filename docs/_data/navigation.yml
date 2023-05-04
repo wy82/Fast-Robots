@@ -21,6 +21,8 @@ main:
     url: /lab-10/
   - title: "Lab 11"
     url: /lab-11/
+  - title: "Lab 12"
+    url: /lab-12/
 lab-1:
   - title: "Lab 1"
     children:
@@ -151,10 +153,18 @@ lab-9:
 lab-10:
  - title: "Lab 10"
    children:
+   - title: "Compute Control"
+     url: /lab-10/#compute-control
+   - title: "Odometry Motion Model"
+     url: /lab-10/#odometry-motion-model
    - title: "Prediction Step"
      url: /lab-10/#prediction-step
+   - title: "Sensor Model"
+     url: /lab-10/#sensor-model
    - title: "Update Step"
      url: /lab-10/#update-step
+   - title: "Simulation Results"
+     url: /lab-10/#simulation-results
 lab-11:
   - title: "Lab 11"
     children:
@@ -162,3 +172,10 @@ lab-11:
       url: /lab-11/#simulation
     - title: "Observation Loop"
       url: /lab-11/#observation-loop
+lab-12:
+  - title: "Lab 12"
+    children:
+    - title: "Path Planning" 
+      url: /lab-12/#path-planning
+    - title: "Localization"
+      url: /lab-12/#localization
