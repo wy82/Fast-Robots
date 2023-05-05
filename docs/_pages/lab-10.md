@@ -30,9 +30,9 @@ Whereas the distance traveled could simply be calculated by taking a Euclidean n
 def compute_control(cur_pose, prev_pose):
 
     total_rot =  (180/np.pi)*np.arctan2((cur_pose[1] - prev_pose[1]), (cur_pose[0]-prev_pose[0]))
-    delta_rot_1 = loc.mapper.normalize_angle(total_rot - prev_pose[2])
+    delta_rot_1 = mapper.normalize_angle(total_rot - prev_pose[2])
     delta_trans = np.sqrt((cur_pose[0]-prev_pose[0])**2 + (cur_pose[1] - prev_pose[1])**2)
-    delta_rot_2 = loc.mapper.normalize_angle(cur_pose[2] - total_rot)
+    delta_rot_2 = mapper.normalize_angle(cur_pose[2] - total_rot)
 
     return delta_rot_1, delta_trans, delta_rot_2
   
@@ -48,9 +48,9 @@ This was implemented by taking conditional probabilities on a Normal distributio
 def odom_motion_model(cur_pose, prev_pose, u):
 
     delta_rot_1, delta_trans, delta_rot_2 = compute_control(cur_pose,prev_pose)
-    rot_1_prob = loc.gaussian(delta_rot_1,u[0],loc.odom_rot_sigma)
-    trans_prob = loc.gaussian(delta_trans,u[1],loc.odom_trans_sigma)
-    rot_2_prob = loc.gaussian(delta_rot_2,u[2],loc.odom_rot_sigma)
+    rot_1_prob = loc.gaussian(mapper.normalize_angle(delta_rot_1-u[0]),0,loc.odom_rot_sigma)
+    trans_prob = loc.gaussian(delta_trans-u[1],0,loc.odom_trans_sigma)
+    rot_2_prob = loc.gaussian(mapper.normalize_angle(delta_rot_2-u[2]),0,loc.odom_rot_sigma)
     prob = rot_1_prob * trans_prob * rot_2_prob
 
     return prob
@@ -112,4 +112,14 @@ def update_step():
 
 ## Simulation Results
 
+To show that the filter actually works, we test the predictions on the simulator:
 
+YOUTUBE
+
+From here we observe that although the filter manages to somewhat accurately estimate the trajectory of the robot, it is still very noisy and prone to errors because of this. 
+
+Furthermore, we also note that the filter has nonzero belief in regions that are impossible to reach, such as inside the boxes or outside the walls.
+
+We also observe that the filter is incredibly slow during the prediction step, and has areas that could be improved upon by vectorizing operations over calling loops.
+
+To address these issues, the discretization of the grid could be refined, and the probabilities in forbidden regions could be manually set to zero during the prediction step. Other solutions to improve accuracy might include adding a second distance sensor, or increasing the number of distance measurements per observation loop.

@@ -54,8 +54,8 @@ Assuming a sampling period of roughly 20 milliseconds (the measurement time budg
 Although this might imply a very high mapping resolution, we note that the robot is constantly moving during each sensor measurement and hence the accuracy of each distance measurement would be somewhat lower. In a 4 meter-by-4 meter empty square room, the distance measurements roughly behave with the secant of the angle. This implies that we might find the greatest rate of change in distance around the corners, so in the worst case we would expect a distance change of about 
 
 $$\begin{align}
-4(\sec\left(45 deg - \frac{50 deg/s}{50 samples/s}\right)) &= 0.09620 m
-\end{align$$
+4\left(\sec\left(45 \text{ deg} - \frac{50 \text{ deg}/\text{s}}{50 \text{samples}/\text{s}}\right)\right) &= 0.09620 \text{ m}
+\end{align}$$
 
 If we assume that this distance change is simply added to the ToF distance reading, we would expect roughly a 100 mm worst case error. While this might seem like a lot, the relative error of the measurement is still below about 5%, and the accuracy is substantially improved when near the middle of the walls and not the corners. In reality however, we observe worse accuracy at longer distances, so this might have to be offset with some correcting factor in the actual data.
 
@@ -186,7 +186,6 @@ However, the lack of synchronization doesn't fully explain the changing initial 
 ## Mapping
 
 To form the line-based map, I tried to make straight lines out of the plotted ToF distance data. In general, I trusted measurements that were closer to the robot's center of rotation. 
-
 
 :-------------------------------------:|:-------------------------------------:|
 ![Map Line](/lab-9-assets/map_line.png)|![Map Line](/lab-9-assets/line.png)|
