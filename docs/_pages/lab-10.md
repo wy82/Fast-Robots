@@ -114,7 +114,7 @@ def update_step():
 
 To show that the filter actually works, we test the predictions on the simulator:
 
-YOUTUBE
+<iframe width="560" height="315" src="https://www.youtube.com/embed/_UWio-37BHw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 From here we observe that although the filter manages to somewhat accurately estimate the trajectory of the robot, it is still very noisy and prone to errors because of this. 
 
