@@ -98,7 +98,98 @@ To show that this actually works, we run this in the simulator:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/kZEBebwmsHc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-
+![Simulation Improved](/lab-11-assets/Simulation_Improved.png))
 
 ## Observation Loop
+
+Next, we proceed to implement an observation loop that commands the robot to take ToF measurements while rotating a full 360 degrees, which will be crucial to collecting measurements for the update step of the Bayes Filter.
+
+To implement this loop on the robot, a PID controller was used to control the yaw velocity, which would be stopped once the robot had completed a full 360 degree displacement in yaw. 
+
+```cpp
+case OBS_LOOP:
+    if (!loop_started){
+      yaw_setpoint = yaw[previdx];
+      idx = 0;
+      disp = 0;
+      loop_started = true;
+    }
+    float phi;
+    phi = yaw[previdx] - yaw_setpoint;
+    yaw_setpoint = yaw[previdx];
+    if (phi >= 180) {
+      phi -= 360;
+    } 
+    if (phi < -180) {
+      phi += 360;
+    }  
+    disp += phi;
+    SERIAL_PORT.println(disp);
+
+    if(abs(disp) <= 360)
+    {
+      yaw_vel_control();
+    }
+    else
+    {
+      analogWrite(A15,255);
+      analogWrite(A16,255);
+      analogWrite(4,255);
+      analogWrite(A5,255);
+      send_obs(360);
+    }
+    break;
+```
+
+During the rotation, distance measurements are collected as fast as possible, where a fixed number of measurements is sent to the laptop that is safely below the typical number of measurements completed in a single loop. Each value of distance is then stamped with a corresponding yaw value for post-processing purposes.
+
+```cpp
+void send_obs(int size)
+{
+    tx_estring_value.clear();
+    
+    // Send data
+    for(int i = 0; i < size; i++){  
+      tx_estring_value.append("Y:");
+      tx_estring_value.append(yaw[i]);
+      tx_estring_value.append("|D1");  
+      tx_estring_value.append(d1[i]);
+      tx_estring_value.append("|D2:");
+      tx_estring_value.append(d2[i]);    
+      tx_characteristic_string.writeValue(tx_estring_value.c_str());
+      tx_estring_value.clear();
+    }
+    
+    previdx = idx;
+    idx = 0;
+}
+```
+
+This then was implemented as the following as the RealRobot Class member function:
+
+```python
+async def perform_observation_loop(self, rot_vel=120):
+    size = 100
+    self.ble.start_notify(self.ble.uuid['RX_STRING'], self.get_data)
+    self.ble.send_command(CMD.OBS_LOOP,"")
+    while len(yaw) <= 100:
+        print(len(yaw))
+    sensor_ranges = d2
+    sensor_bearings = np.zeros((1,size))
+
+async def get_data(uuid,byte_array):
+    global depth1_mm, depth2_mm, temp5s_str, yaw
+    size = 100 
+    temp5s_str = ble.bytearray_to_string(byte_array)
+    temp5s_list = temp5s_str.split("|")
+    y = temp5s_list[0]
+    d1 = temp5s_list[1]
+    d2 = temp5s_list[2]
+    depth1_mm.append(d1[3::])
+    depth2_mm.append(d2[3::])
+    yaw.append(y[2::])
+    if len(motorl) >= size:  
+        yaw,depth1_mm,depth2_mm = [],[],[]        
+```
+
 
