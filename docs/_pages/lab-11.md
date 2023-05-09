@@ -192,4 +192,4 @@ async def get_data(uuid,byte_array):
         yaw,depth1_mm,depth2_mm = [],[],[]        
 ```
 
-
+Finally, to show that this all actually works, the filter is run on the robot at the marked positions in the lab.

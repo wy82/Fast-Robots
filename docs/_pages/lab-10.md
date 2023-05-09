@@ -69,13 +69,14 @@ def prediction_step(cur_odom, prev_odom):
     for prev_x in range(mapper.MAX_CELLS_X):
         for prev_y in range(mapper.MAX_CELLS_Y):
             for prev_a in range(mapper.MAX_CELLS_A):
-                for cur_x in range(mapper.MAX_CELLS_X):
-                    for cur_y in range(mapper.MAX_CELLS_Y):
-                        for cur_a in range(mapper.MAX_CELLS_A):
-                            cur_pose = mapper.from_map(cur_x,cur_y,cur_a)
-                            prev_pose = mapper.from_map(prev_x,prev_y,prev_a)
-                            prob = odom_motion_model(cur_pos,prev_pose,u)
-                            loc.bel_bar[cur_x,cur_y,cur_a] += prob * loc.bel[prev_x,prev_y,prev_a]
+                if loc.bel[prev_x,prev_y,prev_a] > 0.0001:               
+                    for cur_x in range(mapper.MAX_CELLS_X):
+                        for cur_y in range(mapper.MAX_CELLS_Y):
+                            for cur_a in range(mapper.MAX_CELLS_A):
+                                cur_pose = mapper.from_map(cur_x,cur_y,cur_a)
+                                prev_pose = mapper.from_map(prev_x,prev_y,prev_a)
+                                prob = odom_motion_model(cur_pos,prev_pose,u)
+                                loc.bel_bar[cur_x,cur_y,cur_a] += prob * loc.bel[prev_x,prev_y,prev_a]
 ```
 
 ## Sensor Model
