@@ -165,31 +165,53 @@ void send_obs(int size)
 }
 ```
 
-This then was implemented as the following as the RealRobot Class member function:
+The data collection step and post-processing on the jupyter notebook side of the code was implemented as the following as member functions of the RealRobot class. 
+
+The key to getting the data collection step to work was to call the notification handler, but allow for a short delay using the asyncio.sleep() coroutine. This mainly involved adding the async keyword to the functions calling the coroutines, and then adding await to any asynchronous function call.
+
+Furthermore, because the ToF sensor readings were taken continuously throughout the observation loop, the sensor readings 
 
 ```python
 async def perform_observation_loop(self, rot_vel=120):
-    size = 100
     self.ble.start_notify(self.ble.uuid['RX_STRING'], self.get_data)
-    self.ble.send_command(CMD.OBS_LOOP,"")
-    while len(yaw) <= 100:
-        print(len(yaw))
-    sensor_ranges = d2
-    sensor_bearings = np.zeros((1,size))
+    self.ble.send_command(CMD.OBS_LOOP,"") 
+    self.ble.send_command(CMD.SEND_OBS,"")
+    await asyncio.sleep(5)
+    self.ble.send_command(CMD.STOP,"")
+    y = np.array(self.yaw)
+    d1 = np.array(self.depth1_mm)
+    d2 = np.array(self.depth2_mm)
+    self.ble.stop_notify(self.ble.uuid['RX_STRING'], self.get_data)
 
-async def get_data(uuid,byte_array):
-    global depth1_mm, depth2_mm, temp5s_str, yaw
-    size = 100 
-    temp5s_str = ble.bytearray_to_string(byte_array)
+    obs_count = 18
+    inc = 360/obs_count
+    sensor_ranges = np.zeros((1,obs_count))
+    sensor_bearings = np.zeros((1,obs_count))
+        
+    for i in range(obs_count):
+        idx = np.argmin(np.abs(y-inc))
+        sensor_bearings[i] = y[idx]
+        sensor_ranges[i] = d2[idx]
+        
+    return sensor_ranges, sensor_bearings
+async def get_data(self,uuid,byte_array):
+    temp5s_str = self.ble.bytearray_to_string(byte_array)
     temp5s_list = temp5s_str.split("|")
     y = temp5s_list[0]
     d1 = temp5s_list[1]
     d2 = temp5s_list[2]
-    depth1_mm.append(d1[3::])
-    depth2_mm.append(d2[3::])
-    yaw.append(y[2::])
-    if len(motorl) >= size:  
-        yaw,depth1_mm,depth2_mm = [],[],[]        
+    self.depth1_mm.append(int(d1[3::]))
+    self.depth2_mm.append(int(d2[3::]))
+    self.yaw.append(float(y[2::]))
+    print(float(y[2::]))
 ```
 
-Finally, to show that this all actually works, the filter is run on the robot at the marked positions in the lab.
+Finally, to show that this all actually works, the filter is run on the robot at the marked positions in the lab:
+
+![(-3,-2)](/lab-11-assets/)
+
+![(5,-3)](/lab-11-assets/)
+
+![(5,3)](/lab-11-assets/)
+
+![(0,3)](/lab-11-assets/)
