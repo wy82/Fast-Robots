@@ -13,12 +13,12 @@ To begin, we include a brief test of the filter under the simulation, Note that 
 
 ```python
 def compute_control(self, cur_pose, prev_pose):
-        total_rot =  (180/np.pi)*np.arctan2((cur_pose[:,1] - prev_pose[:,1]), 
-                                              (cur_pose[:,0]-prev_pose[:,0]))
-        delta_rot_1 = self.mapper.normalize_angle(total_rot - prev_pose[:,2])
-        delta_trans = np.linalg.norm(cur_pose[:,0:2]-prev_pose[:,0:2],axis = 1)
-        delta_rot_2 = self.mapper.normalize_angle(cur_pose[:,2] - total_rot)
-        return delta_rot_1, delta_trans, delta_rot_2
+    total_rot =  (180/np.pi)*np.arctan2((cur_pose[:,1] - prev_pose[:,1]), 
+                                        (cur_pose[:,0]-prev_pose[:,0]))
+    delta_rot_1 = self.mapper.normalize_angle(total_rot - prev_pose[:,2])
+    delta_trans = np.linalg.norm(cur_pose[:,0:2]-prev_pose[:,0:2],axis = 1)
+    delta_rot_2 = self.mapper.normalize_angle(cur_pose[:,2] - total_rot)
+    return delta_rot_1, delta_trans, delta_rot_2
 
 def odom_motion_model(self, cur_pose, prev_pose, u):
     delta_rot_1, delta_trans, delta_rot_2 = self.compute_control(cur_pose,prev_pose)
@@ -171,6 +171,8 @@ The key to getting the data collection step to work was to call the notification
 
 Furthermore, because the ToF sensor readings were taken continuously throughout the observation loop, the sensor readings 
 
+Finally, because the robot doesn't rotate on its center axis, we convert the distance measurements into equivalent distance measurements from the center of rotation. Consequently, this would mean that the algorithm is localizing the center of rotation, rather than the actual position of the robot. This isn't a huge issue, since converting the localization results to the pose of the robot just amounts to a simple translation that depends on the radius of the rotation and the angle of the robot.
+
 ```python
 async def perform_observation_loop(self, rot_vel=120):
     self.ble.start_notify(self.ble.uuid['RX_STRING'], self.get_data)
@@ -203,15 +205,50 @@ async def get_data(self,uuid,byte_array):
     self.depth1_mm.append(int(d1[3::]))
     self.depth2_mm.append(int(d2[3::]))
     self.yaw.append(float(y[2::]))
-    print(float(y[2::]))
 ```
 
-Finally, to show that this all actually works, the filter is run on the robot at the marked positions in the lab:
+Next, to show that this all actually works, the filter is run on the robot at the marked positions in the lab:
 
-![(-3,-2)](/lab-11-assets/)
+(-3,-2)                            | (5,-3)                          | 
+:---------------------------------:|:-------------------------------:|
+![(-3,-2)](/lab-11-assets/n3n2.png)|![(5,-3)](/lab-11-assets/5n3.png)|
+ (5,3)                         | (0,3)                         |
+:-----------------------------:|:-----------------------------:|
+![(5,3)](/lab-11-assets/53.png)|![(0,3)](/lab-11-assets/03.png)|
 
-![(5,-3)](/lab-11-assets/)
+(-3,-2)                                | (5,-3)                              |
+:-------------------------------------:|:-----------------------------------:|
+![(-3,-2)](/lab-11-assets/bel_n3n2.png)|![(5,-3)](/lab-11-assets/bel_5n3.png)|
+ (5,3)                             | (0,3)                             |
+:---------------------------------:|:---------------------------------:|
+![(5,3)](/lab-11-assets/bel_53.png)|![(0,3)](/lab-11-assets/bel_03.png)|
 
-![(5,3)](/lab-11-assets/)
+From here we observe that the localization is generally pretty accurate, where it gets the position in the map right within a grid cell away. However, the filter results are still very sensitive to the starting pose of the robot, and can easily result in predictions on the other side of the map. This is not surprising, since the number of observations being used is somewhat small.
 
-![(0,3)](/lab-11-assets/)
+To take advantage of the improvements added through vectorizing the localization code, we double the discretization cells along $x$ and $y$, as well as increase the number of observations to 60. Increasing the number even further might still be possible, but it seems that at around 120, the probabilities from the update step become so small they round to zero. 
+
+Although the update step of the filter is generally pretty fast (under a second), the modifications to the discretization of observation counts make pre-caching the observation views per cell much slower, and can easily take up to a minute. This problem might be circumvented by simply storing the views in a pickle file and then loading them upon initializing the BaseLocalization class. 
+
+(-3,-2)                                | (5,-3)                              |
+:-------------------------------------:|:-----------------------------------:|
+![(-3,-2)](/lab-11-assets/ref_n3n2.png)|![(5,-3)](/lab-11-assets/ref_5n3.png)|
+ (5,3)                             | (0,3)                             |
+:---------------------------------:|:---------------------------------:|
+![(5,3)](/lab-11-assets/ref_53.png)|![(0,3)](/lab-11-assets/ref_03.png)|
+
+(-3,-2)                                    | (5,-3)                                  |
+:-----------------------------------------:|:---------------------------------------:|
+![(-3,-2)](/lab-11-assets/ref_bel_n3n2.png)|![(5,-3)](/lab-11-assets/ref_bel_5n3.png)|
+ (5,3)                                 | (0,3)                                 |
+:-------------------------------------:|:-------------------------------------:|
+![(5,3)](/lab-11-assets/ref_bel_53.png)|![(0,3)](/lab-11-assets/ref_bel_03.png)|
+
+Based on the results above, we actually observe that the accuracy of the filter appears actually worse than before. This is somewhat misleading, since the increase of the grid discretization will in general produce more accurate results for when the marked points do not perfectly align with a grid cell like they do for this lab. 
+
+One reason for the loss in accuracy might also be due to the limited discretization along the angular dimension, which was left unchanged. Because each angle of orientation can produce very different distance measurements, it might be very tricky for a set of distance measurements to line up with the expected measurements at any one of the discretized poses.
+
+One avenue for improvement might be to increase the angular discretization. Because this would dramatically kick up the runtime of pre-caching views as well as the prediction step up to several minutes, this would require discarding the prediction step and saving the pre-cached views to memory somehow ahead of time.
+
+Another way to improve this might be to discard the angular pose altogether if the yaw calculated from the IMU is accurate enough. The update step would then compare distance measurements starting at a fixed yaw with distance data that would be corrected to match the correct angular orientation.
+
+
