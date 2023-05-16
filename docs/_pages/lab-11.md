@@ -98,7 +98,7 @@ To show that this actually works, we run this in the simulator:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/kZEBebwmsHc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-![Simulation Improved](/lab-11-assets/Simulation_Improved.png))
+![Simulation Improved](/lab-11-assets/Simulation_Improved.png)
 
 ## Observation Loop
 
