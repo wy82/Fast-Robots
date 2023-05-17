@@ -135,6 +135,23 @@ Finally, to ensure that the sensor readings are valid, the following check was i
 (myICM.status == ICM_20948_Stat_Ok) || (myICM.status == ICM_20948_Stat_FIFOMoreDataAvail)
 ```
 
+To actually convert the quaternion data into the yaw of the robot, this required math that might be hard to follow. Quaternions are basically 4 dimensional complex numbers, so the actual meaning of the data is not very intuitive to begin with. However, it sufficed to simply copy from the library examples:
+
+```cpp
+double q1 = ((double)data.Quat9.Data.Q1) / 1073741824.0;
+double q2 = ((double)data.Quat9.Data.Q2) / 1073741824.0; 
+double q3 = ((double)data.Quat9.Data.Q3) / 1073741824.0;
+double q0 = sqrt(1.0 - ((q1 * q1) + (q2 * q2) + (q3 * q3)));
+yaw[idx] = getYaw(q0,q1,q2,q3);
+
+double getYaw(double q0, double q1, double q2, double q3) {
+    double q2sqr = q2 * q2;
+    double t3 = +2.0 * (q0 * q3 + q1 * q2);
+    double t4 = +1.0 - 2.0 * (q2sqr + q3 * q3);
+    return atan2(t3, t4) * 180.0 / PI;
+}
+```
+
 An additional subtlety with using the DMP is that it resets all biases used to calibrate the IMU sensor readings upon powering off, as the device does not have any onboard memory. To ensure that the device is properly calibrated, the sensor needs to be rotated on each of the 6 axes for about 2 minutes to get the right biases.
 
 While this might seem inconvenient, the DMP also will figure out the absolute orientation of the robot in the process, which saves the effort of finding the right rotation matrices to transform the data. 
@@ -187,11 +204,13 @@ if (success)
 
 This ultimately seems to give pretty robust orientation readings that will keep track of the angle within a few degrees, even after violently shaking the robot.
 
-To show that this actually works, we include an image of the Serial plotter readings after making 90 degree rotations:
+To show that this actually works, we include an video of the Serial plotter readings after making 90 degree rotations:
 
-![90 Degree CW](/lab-12-assets/90_degree_cw.png)
+YOUTUBE
 
-![90 Degree CCW](/lab-12-assets/90_degree_ccw.png)
+Although it might be hard to see the exact yaw values, the rotations roughly change the yaw values by somewhere between 90 to 100 degrees each turn with virtually no noise whatsoever, suggesting that the data is both quite precise and accurate. It also avoid pretty much all of the drift problems associated with naively integrating the gyroscope.
+
+This obviously isn't the most rigorous test of the DMP, and it is definitely worth further investigating the error and biases of the yaw readings using this approach. However, for the purposes of this lab, it is enough to perform pretty accurate orientation control.
 
 ## Localization
 
