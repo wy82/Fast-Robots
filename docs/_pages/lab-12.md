@@ -212,5 +212,4 @@ Although it might be hard to see the exact yaw values, the rotations roughly cha
 
 This obviously isn't the most rigorous test of the DMP, and it is definitely worth further investigating the error and biases of the yaw readings using this approach. However, for the purposes of this lab, it is enough to perform pretty accurate orientation control.
 
-## Localization
 
