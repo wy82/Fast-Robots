@@ -26,9 +26,9 @@ These can be visualized with the following image:
 
 ![Waypoints](/lab-12-assets/Waypoints.png)
 
-## Naive Path Planning
+## Path Planning
 
-To ensure that at least one successful run would be completed, the first approach was to implement a naive trajectory consisting of only forward movements and pure rotations.
+For this lab, the first approach was to implement a naive trajectory consisting of only forward movements and pure rotations.
 
 The robot would then reach the waypoints via PID controllers on the distance to the walls and the yaw from the IMU.
 
@@ -47,9 +47,11 @@ To simplify the trajectory even further, we use an idea borrowed from Ryan Chan 
 
 ![Trajectory](/lab-12-assets/Trajectory.png)
 
-In a sense, using PID control on the distance from the walls is almost no different from using a localization algorithm, since it uses distance measurements and knowledge about the map to guide the robot to each waypoints. It also might potentially be faster, since it cuts out the observation loops needed for estimating the pose.
+A slightly more subtle point about this approach is that the ToF sensors are not capable of measuring distances past roughly 1.8 meters, the sensor will outputs zeros past this point (even in the "long" mode). This seems to contradict the datasheet, and is probably a consequence of setting a measurement time budget that is too short. However, extending the time budget would mean a longer sampling time and less accurate control, so this option wasn't explored for this lab to make the solution slightly more robust.
 
-The main difference is that the localization algorithm is also capable to discerning the exact angular pose of the robot, whereas simple PID control relies on the measurements from the IMU to get the robot's orientation. The other disadvantage with this approach is that it makes no effort to correct the orientation of the robot while driving forward, which puts it at risk to collide with walls.
+ To work around the limited sensor range, the robot was programmed to turn facing the closest wall, and then back up to the PID setpoint. Despite this, the robot will still need to back up past the maximum sensor range. While one option would be to simply perform a 180 degree rotation so that it would face a closer wall, this was somewhat more risky since the robot's orientation control was pretty unreliable.
+
+Since these distances were only about a foot outside the maximum sensor range, the solution was to simply add a short open loop control boost to the motor values for about 0.2 seconds.
 
 To program the simplified trajectory on the robot, this required essentially programming every single action. 
 
@@ -59,47 +61,33 @@ Below we include a list of the setpoints and actions used to complete the trajec
 
 ```python
 1. Distance Setpoint:  457  mm
-2. Angular Setpoint:  -90   deg
-3. Distance Setpoint:  1372 mm
-4. Angular Setpoint;  -180  deg 
+2. Angular Setpoint:   90   deg
+3. Distance Setpoint:  1676 mm + Open Loop Boost
+4. Angular Setpoint;   180  deg 
 5. Distance Setpoint:  457  mm 
-6. Angular Setpoint:  -90   deg
+6. Angular Setpoint : -90   deg
 7. Distance Setpoint:  457  mm
-8. Angular Setpoint:   0    deg 
-9. Distance Setpoint:  457  mm 
-10. Angular Setpoint:  90   deg
-11. Distance Setpoint: 762  mm
-12. Angular Setpoint:  180  deg
-13. Distance Setpoint: 762  mm 
+8. Angular Setpoint:  -180  deg 
+9. Distance Setpoint:  1800 mm + Open Loop Boost
+10. Angular Setpoint: -90   deg
+11. Distance Setpoint: 1676 mm + Open Loop Boost
+12. Angular Setpoint:  0    deg
+13. Distance Setpoint: 1676 mm 
 ```
 
 Note that we take the initial angular orientation as 0 degrees, and that we actually subtract a small offset of about 70mm  to each of the setpoints to ensure that the center of the robot reaches the setpoint.
 
-After testing this out on the real maze, we successfully pass through all the waypoints:
+After testing this out on the real maze, the robot successfully passes through all the waypoints:
 
-YOUTUBE
+<iframe width="560" height="315" src="https://www.youtube.com/embed/isSGnjyd-uM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-This was then modified to the original, slightly more complicated trajectory, which had the following setpoints:
+In hindsight, this approach was too optimistic about the degree of control the robot had over orientation, as the turns were very inconsistent in accuracy. The true rate of success of this approach was probably no greater than 1 out of every 20 runs. This was partially because the yaw readings were pretty unreliable, and would drastically change upon moving too quickly or from shaking.
 
-```python
-1. Distance Setpoint:  2370 mm
-2. Angular Setpoint:  -45   deg
-3. Distance Setpoint:  1676 mm
-4. Angular Setpoint;  -64   deg 
-5. Distance Setpoint:  510  mm 
-6. Angular Setpoint:   26   deg
-7. Distance Setpoint:  457  mm 
-8. Angular Setpoint:   0    deg 
-9. Distance Setpoint:  457  mm 
-10. Angular Setpoint:  90   deg
-11. Distance Setpoint: 762  mm
-12. Angular Setpoint:  180  deg
-13. Distance Setpoint: 762  mm 
-```
+In a sense, using PID control on the distance from the walls is similar to using a localization algorithm, since it uses distance measurements and knowledge about the map to guide the robot to each waypoints. It also might potentially be faster, since it cuts out the observation loops needed for estimating the pose.
 
-This then resulted in the following performance:
+The main difference is that the localization algorithm is also capable to discerning the exact angular pose of the robot, whereas simple PID control relies on the measurements from the IMU to get the robot's orientation. 
 
-YOUTUBE
+The other disadvantage with this approach is that it makes no effort to correct the orientation of the robot while driving forward, which puts it at risk to collide with walls. This was especially a problem with traversing long distances, since the robot would deviate more from the desired course with even a slightly incorrect angular pose.
 
 ## Absolute Orientation
 
@@ -206,10 +194,16 @@ This ultimately seems to give pretty robust orientation readings that will keep 
 
 To show that this actually works, we include an video of the Serial plotter readings after making 90 degree rotations:
 
-YOUTUBE
+<iframe width="560" height="315" src="https://www.youtube.com/embed/lfEleWTGCto" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-Although it might be hard to see the exact yaw values, the rotations roughly change the yaw values by somewhere between 90 to 100 degrees each turn with virtually no noise whatsoever, suggesting that the data is both quite precise and accurate. It also avoid pretty much all of the drift problems associated with naively integrating the gyroscope.
+Although it might be hard to see the exact yaw values, the rotations roughly change the yaw values by somewhere between 90 to 100 degrees each turn with virtually no noise whatsoever, suggesting that the data is both quite precise and accurate. It also avoids drift problems from the gyroscope to some extent, as the values seem to stabilize after a while. 
 
-This obviously isn't the most rigorous test of the DMP, and it is definitely worth further investigating the error and biases of the yaw readings using this approach. However, for the purposes of this lab, it is enough to perform pretty accurate orientation control.
+It is admittedly hard to say what exactly the sensor fusion algorithms are doing, since the DMP is essentially a black box.This obviously also isn't the most rigorous test of the DMP, and it is definitely worth further investigating the error and biases of the yaw readings using this approach.
 
+In hindsight, calculating orientation with a magnetometer may not be a good idea in the first place, since the IMU was placed very closely to the motors. The magnetic field interference certainly isn't i.i.d. Gaussian, so it wouldn't be surprising if that made the orientation readings inaccurate. There were certainly many occasions where the yaw readings became completely meaningless and the robot would lose control over orientation. 
 
+To mitigate issues with interference, periodic pauses were inserted between each movement, and the yaw control was repeated with refining tolerances to hopefully correct the orientation if the yaw values became more accurate over an idle period. This seemed to help some of the time, but it was still admittedly pretty unreliable. The accuracy of a PID control based approach depends almost entirely on the level of orientation control, so this made getting a successful run pretty difficult overall.
+
+A better solution may have been to simply use a localization algorithm, and possible use the orientation readings from the IMU to correct mistakes. Since the IMU would inevitably give inaccurate readings, it might be better to discount the confidence in the IMU readings. A more interesting approach would be to use the magnetometer from the IMU as a motor encoder, and to hopefully improve the prediction step of the Bayes Filter this way. 
+
+Finally, another approach that would be interesting to try would be to attempt some form of optimal control with LQR and somehow integrate that with path planning, but this would only really work if the robot had a better way to localize itself in the map.
